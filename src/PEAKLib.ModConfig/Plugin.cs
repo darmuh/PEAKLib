@@ -36,6 +36,13 @@ public partial class ModConfigPlugin : BaseUnityPlugin
     internal static ModConfigPlugin instance = null!;
     internal InputBindingCaptureService InputBindingCapture { get; private set; } = null!;
 
+    // localizations
+    private static TranslationKey? ModSettingsLoc;
+    private static TranslationKey? ModControlsLoc;
+
+    private static UIPage? settingsParent;
+    private static UIPage? controlsParent;
+
     private void Awake()
     {
         instance = this;
@@ -48,51 +55,42 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
     private void Start()
     {
+        LoadModConfigLocalizations();
         LoadModSettings();
 
+        // delegate for Mod Settings Page
         void builderDelegate(Transform parent)
         {
-            Log.LogDebug("builderDelegate");
+            Log.LogDebug("Mod Settings builderDelegate");
             var mainMenuHandler = parent.GetComponentInParent<MainMenuPageHandler>();
             var pauseMenuHandler = parent.GetComponentInParent<PauseMenuHandler>();
 
             if (mainMenuHandler == null && pauseMenuHandler == null)
                 throw new Exception("Failed to get a UIPageHandler");
 
-            var parentPage =
-                mainMenuHandler?.GetPage<MainMenuSettingsPage>()
-                ?? pauseMenuHandler?.GetPage<PauseMenuSettingsMenuPage>();
+            settingsParent =
+                (mainMenuHandler?.GetPage<MainMenuSettingsPage>()
+                ?? pauseMenuHandler?.GetPage<PauseMenuSettingsMenuPage>()) ?? throw new Exception("Failed to get the parent page (settings)");
 
-            if (parentPage == null)
-                throw new Exception("Failed to get the parent page");
+            if (ModSettingsLoc == null)
+                throw new Exception("Failed to get ModSettingsLoc (Localization Key)");
 
-            var modSettingsPage = MenuAPI.CreateChildPage("ModSettings", parentPage);
+            if (ModControlsLoc == null)
+                throw new Exception("Failed to get ModControlsLoc (Localization Key)");
+
+            var modSettingsPage = MenuAPI.CreateChildPage("ModSettings", settingsParent);
 
             if (mainMenuHandler != null) // we are on main menu, create a background
                 modSettingsPage.CreateBackground(new Color(0, 0, 0, 0.8667f));
 
             modSettingsPage.SetOnOpen(() =>
             {
-                //Double check if any config items have been created since initializatio
+                //Double check if any config items have been created since initialization
                 ProcessModEntries();
             });
 
-            var modSettingsLocalization = MenuAPI
-                .CreateLocalization("MOD SETTINGS")
-                .AddLocalization("MOD SETTINGS", Language.English)
-                .AddLocalization("PARAMÈTRES DU MOD", Language.French)
-                .AddLocalization("IMPOSTAZIONI MOD", Language.Italian)
-                .AddLocalization("MOD-EINSTELLUNGEN", Language.German)
-                .AddLocalization("AJUSTES DEL MOD", Language.SpanishSpain)
-                .AddLocalization("CONFIGURACIONES DEL MOD", Language.SpanishLatam)
-                .AddLocalization("CONFIGURAÇÕES DE MOD", Language.BRPortuguese)
-                .AddLocalization("НАСТРОЙКИ МОДА", Language.Russian)
-                .AddLocalization("НАЛАШТУВАННЯ МОДА", Language.Ukrainian)
-                .AddLocalization("模组设置", Language.SimplifiedChinese)
-                .AddLocalization("模組設定", Language.TraditionalChinese)
-                .AddLocalization("MOD設定", Language.Japanese)
-                .AddLocalization("모드 설정", Language.Korean)
-                .AddLocalization("USTAWIENIA MODÓW", Language.Polish);
+            // restore default parent pages after closing the page
+            modSettingsPage.SetOnClose(RestoreDefaultParentPages);
 
             var headerContainer = new GameObject("Header")
                 .ParentTo(modSettingsPage)
@@ -107,7 +105,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .SetFontSize(48)
                 .ParentTo(headerContainer)
                 .ExpandToParent()
-                .SetLocalizationIndex(modSettingsLocalization);
+                .SetLocalizationIndex(ModSettingsLoc);
 
             newText.Text.fontSizeMax = 48;
             newText.Text.fontSizeMin = 24;
@@ -138,7 +136,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             {
                 var controlsButton = MenuAPI
                     .CreateMenuButton("MOD CONTROLS")
-                    .SetLocalizationIndex("MOD CONTROLS") //localization should exist from controls page builder
+                    .SetLocalizationIndex(ModControlsLoc)
                     .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
                     .ParentTo(modSettingsPage)
                     .SetPosition(new Vector2(285f, -160f))
@@ -150,6 +148,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                         ModdedControlsMenu.Instance.MainPage,
                         new SetActivePageTransistion()
                     );
+                    ModdedControlsMenu.Instance.MainPage.SetParentPage(modSettingsPage);
                 });
             }
 
@@ -214,7 +213,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
             var modSettingsButton = MenuAPI
                 .CreatePauseMenuButton("MOD SETTINGS")
-                .SetLocalizationIndex(modSettingsLocalization)
+                .SetLocalizationIndex(ModSettingsLoc)
                 .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
                 .ParentTo(parent)
                 .OnClick(() =>
@@ -229,20 +228,20 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             modSettingsButton?.SetPosition(new Vector2(171, -230)).SetWidth(220);
         }
 
+        // delegate for Mod Controls Page
         void controlsBuilder(Transform parent)
         {
-            Log.LogDebug("controlsBuilder");
-            var pauseMenuHandler = parent.GetComponentInParent<PauseMenuHandler>();
+            Log.LogDebug("Mod Controls controlsBuilder delegate");
+            var pauseMenuHandler = parent.GetComponentInParent<PauseMenuHandler>() ?? throw new Exception("Failed to get a UIPageHandler");
+            controlsParent = parent.GetComponent<PauseMenuControlsPage>() ?? throw new Exception("Failed to get the parent page to create Modded Controls Page");
+            
+            if (ModControlsLoc == null)
+                throw new Exception("Failed to get ModControlsLoc (Localization Key)");
 
-            if (pauseMenuHandler == null)
-                throw new Exception("Failed to get a UIPageHandler");
+            if (ModSettingsLoc == null)
+                throw new Exception("Failed to get ModSettingsLoc (Localization Key)");
 
-            var parentPage = parent.GetComponent<PauseMenuControlsPage>();
-
-            if (parentPage == null)
-                throw new Exception("Failed to get the parent page to create Modded Controls Page");
-
-            var modControlsPage = MenuAPI.CreateChildPage("ModdedControlsPage", parentPage);
+            var modControlsPage = MenuAPI.CreateChildPage("ModdedControlsPage", controlsParent);
 
             var controlsMenu = modControlsPage.gameObject.AddComponent<ModdedControlsMenu>();
 
@@ -254,19 +253,18 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 controlsMenu.ShowControls();
             });
 
+            // restore default parent pages after closing the page
+            modControlsPage.SetOnClose(RestoreDefaultParentPages);
+
             controlsMenu.MainPage = modControlsPage;
 
             controlsMenu.RebindNotif = MenuAPI
                 .CreateButton("RebindModdedKey")
-                .ParentTo(parentPage.transform.parent)
+                .ParentTo(controlsParent.transform.parent)
                 .ExpandToParent();
 
             controlsMenu.RebindNotif.Text.SetFontSize(48);
             controlsMenu.RebindNotif.gameObject.SetActive(false);
-
-            var modControlsLocalization = MenuAPI
-                .CreateLocalization("MOD CONTROLS")
-                .AddLocalization("MOD CONTROLS", Language.English);
 
             var headerContainer = new GameObject("Header")
                 .ParentTo(modControlsPage)
@@ -281,7 +279,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .SetFontSize(48)
                 .ParentTo(headerContainer)
                 .ExpandToParent()
-                .SetLocalizationIndex(modControlsLocalization);
+                .SetLocalizationIndex(ModControlsLoc);
 
             newText.Text.fontSizeMax = 48;
             newText.Text.fontSizeMin = 24;
@@ -298,7 +296,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
             var modSettingsButton = MenuAPI
                 .CreateMenuButton("MOD SETTINGS")
-                .SetLocalizationIndex("MOD SETTINGS") //re-use existing localization from settings builder
+                .SetLocalizationIndex(ModSettingsLoc)
                 .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
                 .ParentTo(modControlsPage)
                 .SetPosition(new Vector2(285f, -160f))
@@ -309,6 +307,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                         ModdedSettingsMenu.Instance.MainPage,
                         new SetActivePageTransistion()
                     );
+                    ModdedSettingsMenu.Instance.MainPage.SetParentPage(modControlsPage); //
                 });
 
             var restoreAllButton = MenuAPI
@@ -354,7 +353,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
             var modControlsButton = MenuAPI
                 .CreatePauseMenuButton("MOD CONTROLS")
-                .SetLocalizationIndex(modControlsLocalization)
+                .SetLocalizationIndex(ModControlsLoc)
                 .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
                 .ParentTo(parent)
                 .OnClick(() =>
@@ -373,6 +372,60 @@ public partial class ModConfigPlugin : BaseUnityPlugin
         MenuAPI.AddToSettingsMenu(builderDelegate);
         //controls menu builder
         MenuAPI.AddToControlsMenu(controlsBuilder);
+    }
+
+    private static void LoadModConfigLocalizations()
+    {
+        // Vanilla Localization Keys:       CURRENT_LANGUAGE,English,Français,Italiano,Deutsch,Español (España),Español (LatAm),Português (BR),Русский,Українська,简体中文,繁体中文,日本語,한국어,Polski,Türkçe,ENDLINE
+        // Vanilla Controls Localization:   CONTROLS,CONTROLS,COMMANDES,COMANDI,STEUERUNG,CONTROLES,CONTROLES,CONTROLES,УПРАВЛЕНИЕ,КЕРУВАННЯ,操作方式,控制,コントロール,조작 방법,STEROWANIE,KONTROLLER,ENDLINE
+        // Vanilla Settings Localization:   SETTINGS,SETTINGS,PARAMÈTRES,IMPOSTAZIONI,EINSTELLUNGEN,AJUSTES,AJUSTES,CONFIGURAÇÕES,НАСТРОЙКИ,НАЛАШТУВАННЯ,设置,設定,設定,설정,USTAWIENIA,AYARLAR,ENDLINE
+
+        // Below translations are best effort, if a better translation exists please feel free to offer corrections
+        
+        ModSettingsLoc = MenuAPI
+                .CreateLocalization("MOD SETTINGS")
+                .AddLocalization("MOD SETTINGS", Language.English)
+                .AddLocalization("PARAMÈTRES DU MOD", Language.French)
+                .AddLocalization("IMPOSTAZIONI MOD", Language.Italian)
+                .AddLocalization("MOD-EINSTELLUNGEN", Language.German)
+                .AddLocalization("AJUSTES DEL MOD", Language.SpanishSpain)
+                .AddLocalization("CONFIGURACIONES DEL MOD", Language.SpanishLatam)
+                .AddLocalization("CONFIGURAÇÕES DE MOD", Language.BRPortuguese)
+                .AddLocalization("НАСТРОЙКИ МОДА", Language.Russian)
+                .AddLocalization("НАЛАШТУВАННЯ МОДА", Language.Ukrainian)
+                .AddLocalization("模组设置", Language.SimplifiedChinese)
+                .AddLocalization("模組設定", Language.TraditionalChinese)
+                .AddLocalization("MOD設定", Language.Japanese)
+                .AddLocalization("모드 설정", Language.Korean)
+                .AddLocalization("USTAWIENIA MODÓW", Language.Polish)
+                .AddLocalization("MOD AYARLAR", Language.Turkish);
+
+        ModControlsLoc = MenuAPI
+                .CreateLocalization("MOD CONTROLS")
+                .AddLocalization("MOD CONTROLS", Language.English)
+                .AddLocalization("COMMANDES DU MOD", Language.French)
+                .AddLocalization("COMANDI MOD", Language.Italian)
+                .AddLocalization("MOD-STEUERUNG", Language.German)
+                .AddLocalization("CONTROLES DEL MOD", Language.SpanishSpain)
+                .AddLocalization("CONTROLES DEL MOD", Language.SpanishLatam)
+                .AddLocalization("CONTROLES DE MOD", Language.BRPortuguese)
+                .AddLocalization("УПРАВЛЕНИЕ MOD", Language.Russian)
+                .AddLocalization("КЕРУВАННЯ MOD", Language.Ukrainian)
+                .AddLocalization("MOD 操作方式", Language.SimplifiedChinese)
+                .AddLocalization("MOD 控制", Language.TraditionalChinese)
+                .AddLocalization("MODコントロール", Language.Japanese)
+                .AddLocalization("MOD 조작 방법", Language.Korean)
+                .AddLocalization("STEROWANIE MODÓW", Language.Polish)
+                .AddLocalization("MOD KONTROLLER", Language.Turkish);
+    }
+
+    private static void RestoreDefaultParentPages()
+    {
+        if (settingsParent != null)
+            ModdedSettingsMenu.Instance?.MainPage.SetParentPage(settingsParent);
+
+        if (controlsParent != null)
+            ModdedControlsMenu.Instance?.MainPage.SetParentPage(controlsParent);
     }
 
     private static bool modSettingsLoaded = false;

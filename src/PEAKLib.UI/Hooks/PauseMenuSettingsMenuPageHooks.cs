@@ -15,7 +15,6 @@ static class PauseMenuSettingsMenuPageHooks
 
     static void Prefix_Start(PauseMenuSettingsMenuPage self)
     {
-        //need this here for now to not make breaking changes to other mods (ie. PocketPassport)
         MenuAPI.settingsMenuBuilderDelegate?.Invoke(self.gameObject.transform);
     }
 }
