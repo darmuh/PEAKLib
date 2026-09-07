@@ -7,6 +7,7 @@ using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using MonoDetour;
+using MonoDetour.HookGen;
 using PEAKLib.Core;
 using PEAKLib.ModConfig.Components;
 using PEAKLib.UI;
@@ -14,7 +15,6 @@ using PEAKLib.UI.Elements;
 using pworld.Scripts.Extensions;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Zorro.UI;
 using Language = LocalizedText.Language;
@@ -32,16 +32,14 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log { get; } = BepInEx.Logging.Logger.CreateLogSource(Name);
     private static List<ConfigEntryBase> EntriesProcessed { get; set; } = [];
-    internal static List<ModKeyToName> ModdedKeys { get; set; } = [];
     internal static ModConfigPlugin instance = null!;
     internal InputBindingCaptureService InputBindingCapture { get; private set; } = null!;
 
     // localizations
     private static TranslationKey? ModSettingsLoc;
-    private static TranslationKey? ModControlsLoc;
 
     private static UIPage? settingsParent;
-    private static UIPage? controlsParent;
+    private static PauseMenuControlsPage? controlsParent;
 
     private void Awake()
     {
@@ -51,6 +49,14 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             ?? gameObject.AddComponent<InputBindingCaptureService>();
         MonoDetourManager.InvokeHookInitializers(typeof(ModConfigPlugin).Assembly);
         Log.LogInfo($"Plugin {Name} is loaded!");
+    }
+
+    // AutoReload support
+    private void OnDestroy()
+    {
+        // Dispose all hooks
+        DefaultMonoDetourManager.Instance.Dispose();
+        Log.LogInfo($"Plugin {Name} unloaded!");
     }
 
     private void Start()
@@ -70,13 +76,10 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
             settingsParent =
                 (mainMenuHandler?.GetPage<MainMenuSettingsPage>()
-                ?? pauseMenuHandler?.GetPage<PauseMenuSettingsMenuPage>()) ?? throw new Exception("Failed to get the parent page (settings)");
+                ?? pauseMenuHandler?.transform.Find("SettingsPage")?.GetComponent<PauseMenuSettingsMenuPage>());
 
-            if (ModSettingsLoc == null)
-                throw new Exception("Failed to get ModSettingsLoc (Localization Key)");
-
-            if (ModControlsLoc == null)
-                throw new Exception("Failed to get ModControlsLoc (Localization Key)");
+            ThrowHelper.ThrowIfArgumentNull(settingsParent);
+            ThrowHelper.ThrowIfArgumentNull(ModSettingsLoc);
 
             var modSettingsPage = MenuAPI.CreateChildPage("ModSettings", settingsParent);
 
@@ -88,9 +91,6 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 //Double check if any config items have been created since initialization
                 ProcessModEntries();
             });
-
-            // restore default parent pages after closing the page
-            modSettingsPage.SetOnClose(RestoreDefaultParentPages);
 
             var headerContainer = new GameObject("Header")
                 .ParentTo(modSettingsPage)
@@ -132,25 +132,17 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             var settingsMenu = content.gameObject.AddComponent<ModdedSettingsMenu>();
             settingsMenu.MainPage = modSettingsPage;
 
-            if (pauseMenuHandler != null)
-            {
-                var controlsButton = MenuAPI
-                    .CreateMenuButton("MOD CONTROLS")
-                    .SetLocalizationIndex(ModControlsLoc)
-                    .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
-                    .ParentTo(modSettingsPage)
-                    .SetPosition(new Vector2(285f, -160f))
-                    .SetWidth(200);
-
-                controlsButton.OnClick(() =>
-                {
-                    pauseMenuHandler.TransistionToPage(
-                        ModdedControlsMenu.Instance.MainPage,
-                        new SetActivePageTransistion()
-                    );
-                    ModdedControlsMenu.Instance.MainPage.SetParentPage(modSettingsPage);
-                });
-            }
+            settingsMenu.FilterDropdown = MenuAPI.CreateDropdown("Settings Filter", settingsMenu.transform)
+                .SetOptions(["Bools", "Strings", "Numbers", "Enums", "Controls"])
+                .SetLabelColor(Color.wheat)
+                .SetBackgroundColor(Color.slateBlue)
+                .SetArrowColor(Color.wheat)
+                .ParentTo(modSettingsPage)
+                .SetMultiSelect(true)
+                .SetInitialValue(31) // all bits selected
+                .OnValueChanged(settingsMenu.SetFilter)
+                .SetSize(new(200f, 70f))
+                .SetPosition(new Vector2(285f, -160f)); // position needs to be set last
 
             MenuAPI
                 .CreateText("Search")
@@ -200,7 +192,8 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .SetOffsetMax(new Vector2(0, -110f));
 
             settingsMenu.Content = tabContent.Content;
-            settingsMenu.Tabs = moddedSettingsTABS;
+            settingsMenu.ModTabs = moddedSettingsTABS;
+            settingsMenu.SectionTabs = modSectionTABS;
 
             foreach (var (modName, configEntryBases) in GetModConfigEntries())
             {
@@ -221,6 +214,8 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     var handler = mainMenuHandler as UIPageHandler ?? pauseMenuHandler;
 
                     handler?.TransistionToPage(modSettingsPage, new SetActivePageTransistion());
+
+                    ModdedSettingsMenu.Instance?.MainPage.SetParentPage(settingsParent);
                 });
 
             modSettingsPage.gameObject.SetActive(false);
@@ -228,150 +223,48 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             modSettingsButton?.SetPosition(new Vector2(171, -230)).SetWidth(220);
         }
 
-        // delegate for Mod Controls Page
-        void controlsBuilder(Transform parent)
+        // instead of an independent controls page, should just use the mod settings page as a base
+        // Add a filter button in place of the Mod Controls button
+        // filter button popup with dropdown? Or just a dropdown in place?
+        // Have two entry points to mod settings page; from controls -> mod settings filter:controls; from settings -> mod settings filter:all
+        // show duplicate control values with yellow text?
+
+        void modControls(Transform parent)
         {
-            Log.LogDebug("Mod Controls controlsBuilder delegate");
-            var pauseMenuHandler = parent.GetComponentInParent<PauseMenuHandler>() ?? throw new Exception("Failed to get a UIPageHandler");
-            controlsParent = parent.GetComponent<PauseMenuControlsPage>() ?? throw new Exception("Failed to get the parent page to create Modded Controls Page");
-            
-            if (ModControlsLoc == null)
-                throw new Exception("Failed to get ModControlsLoc (Localization Key)");
+            ThrowHelper.ThrowIfArgumentNull(ModSettingsLoc);
 
-            if (ModSettingsLoc == null)
-                throw new Exception("Failed to get ModSettingsLoc (Localization Key)");
+            var pauseMenuHandler = parent.GetComponentInParent<PauseMenuHandler>();
+            // reposition back button to better fit our new button
+            var back = parent.Find("UI_MainMenuButton_LeaveGame (3)").GetComponent<RectTransform>();
+            back.anchoredPosition = new(150f, -222.9999f);
+            back.sizeDelta = new(120f, 67f);
 
-            var modControlsPage = MenuAPI.CreateChildPage("ModdedControlsPage", controlsParent);
+            controlsParent = parent.GetComponentInChildren<PauseMenuControlsPage>();
 
-            var controlsMenu = modControlsPage.gameObject.AddComponent<ModdedControlsMenu>();
-
-            modControlsPage.SetOnOpen(() =>
-            {
-                //Double check if any config items have been created since initialization
-                Log.LogDebug("Modded Controls Menu Opened!");
-                ProcessModEntries();
-                controlsMenu.ShowControls();
-            });
-
-            // restore default parent pages after closing the page
-            modControlsPage.SetOnClose(RestoreDefaultParentPages);
-
-            controlsMenu.MainPage = modControlsPage;
-
-            controlsMenu.RebindNotif = MenuAPI
-                .CreateButton("RebindModdedKey")
-                .ParentTo(controlsParent.transform.parent)
-                .ExpandToParent();
-
-            controlsMenu.RebindNotif.Text.SetFontSize(48);
-            controlsMenu.RebindNotif.gameObject.SetActive(false);
-
-            var headerContainer = new GameObject("Header")
-                .ParentTo(modControlsPage)
-                .AddComponent<PeakElement>()
-                .SetAnchorMinMax(new Vector2(0, 1))
-                .SetPosition(new Vector2(40, -40))
-                .SetPivot(new Vector2(0, 1))
-                .SetSize(new Vector2(360, 100));
-
-            var newText = MenuAPI
-                .CreateText("Mod Controls", "HeaderText")
-                .SetFontSize(48)
-                .ParentTo(headerContainer)
-                .ExpandToParent()
-                .SetLocalizationIndex(ModControlsLoc);
-
-            newText.Text.fontSizeMax = 48;
-            newText.Text.fontSizeMin = 24;
-            newText.Text.enableAutoSizing = true;
-            newText.Text.alignment = TextAlignmentOptions.Center;
-
-            var backButton = MenuAPI
-                .CreateMenuButton("Back (Controls)")
-                .SetLocalizationIndex("BACK") // Peak already have a "BACK" official translation, so let's just use it
-                .SetColor(new Color(0.5189f, 0.1297f, 0.1718f)) //match vanilla back
-                .ParentTo(modControlsPage)
-                .SetPosition(new Vector2(120f, -160f))
-                .SetWidth(120f);
+            ThrowHelper.ThrowIfArgumentNull(pauseMenuHandler);
 
             var modSettingsButton = MenuAPI
-                .CreateMenuButton("MOD SETTINGS")
+                .CreatePauseMenuButton("MOD SETTINGS")
                 .SetLocalizationIndex(ModSettingsLoc)
                 .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
-                .ParentTo(modControlsPage)
-                .SetPosition(new Vector2(285f, -160f))
-                .SetWidth(220)
-                .OnClick(() =>
-                {
-                    pauseMenuHandler.TransistionToPage(
-                        ModdedSettingsMenu.Instance.MainPage,
-                        new SetActivePageTransistion()
-                    );
-                    ModdedSettingsMenu.Instance.MainPage.SetParentPage(modControlsPage); //
-                });
-
-            var restoreAllButton = MenuAPI
-                .CreateMenuButton("Restore Defaults")
-                .SetLocalizationIndex("RESTOREDEFAULTS") // Peak has an official translation for this as well
-                .SetColor(new Color(0.3919f, 0.1843f, 0.6235f)) //same as default restore defaults button
-                .ParentTo(modControlsPage)
-                .SetPosition(new Vector2(225, -220))
-                .SetWidth(300)
-                .OnClick(controlsMenu.OnResetAllClicked);
-
-            modControlsPage.SetBackButton(backButton.GetComponent<Button>()); // sadly backButton.Button doesn't work cause Awake have not being called yet
-
-            MenuAPI
-                .CreateText("Search")
-                .ParentTo(modControlsPage)
-                .SetPosition(new Vector2(65f, -245f));
-
-            var content = new GameObject("Content")
-                .AddComponent<PeakElement>()
-                .ParentTo(modControlsPage)
-                .SetPivot(new Vector2(0, 1))
-                .SetAnchorMin(new Vector2(0, 1))
-                .SetAnchorMax(new Vector2(0, 1))
-                .SetPosition(new Vector2(428, -70))
-                .SetSize(new Vector2(1360, 980));
-
-            var scrollableContent = MenuAPI
-                .CreateScrollableContent("ScrollableContent")
-                .ParentTo(content)
-                .ExpandToParent()
-                .SetOffsetMax(new Vector2(0, -60f));
-
-            controlsMenu.Content = scrollableContent.Content;
-
-            var textInput = MenuAPI
-                .CreateTextInput("SearchInput")
-                .ParentTo(modControlsPage)
-                .SetSize(new Vector2(300, 70))
-                .SetPosition(new Vector2(215f, -330f))
-                .SetPlaceholder("Search here")
-                .OnValueChanged(controlsMenu.SetSearch);
-
-            var modControlsButton = MenuAPI
-                .CreatePauseMenuButton("MOD CONTROLS")
-                .SetLocalizationIndex(ModControlsLoc)
-                .SetColor(new Color(0.185f, 0.394f, 0.6226f)) //same blue as main menu settings button
                 .ParentTo(parent)
+                .SetPosition(new(305f, -222.9999f))
+                .SetWidth(190f)
                 .OnClick(() =>
                 {
-                    pauseMenuHandler.TransistionToPage(
-                        modControlsPage,
-                        new SetActivePageTransistion()
-                    );
+                    // set filter view to controls only and open settings
+                    ModdedSettingsMenu.Instance.FilterDropdown.Dropdown.value = 16;
+                    ModdedSettingsMenu.Instance.FilterValue = 16;
+                    ModdedSettingsMenu.Instance.MainPage.SetParentPage(controlsParent);
+                    pauseMenuHandler?.TransistionToPage(ModdedSettingsMenu.Instance.MainPage, new SetActivePageTransistion());
                 });
-
-            modControlsPage.gameObject.SetActive(false);
-            modControlsButton?.SetPosition(new Vector2(205, -291)).SetWidth(220);
         }
 
         //settings menu builder
-        MenuAPI.AddToSettingsMenu(builderDelegate);
+        MenuAPI.AddToSettingsMenus(builderDelegate);
         //controls menu builder
-        MenuAPI.AddToControlsMenu(controlsBuilder);
+        MenuAPI.AddToControlsMenu(modControls);
+
     }
 
     private static void LoadModConfigLocalizations()
@@ -400,6 +293,8 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .AddLocalization("USTAWIENIA MODÓW", Language.Polish)
                 .AddLocalization("MOD AYARLAR", Language.Turkish);
 
+        // Not used, perhaps will in the future so leaving these comments
+        /*
         ModControlsLoc = MenuAPI
                 .CreateLocalization("MOD CONTROLS")
                 .AddLocalization("MOD CONTROLS", Language.English)
@@ -416,16 +311,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .AddLocalization("MODコントロール", Language.Japanese)
                 .AddLocalization("MOD 조작 방법", Language.Korean)
                 .AddLocalization("STEROWANIE MODÓW", Language.Polish)
-                .AddLocalization("MOD KONTROLLER", Language.Turkish);
-    }
-
-    private static void RestoreDefaultParentPages()
-    {
-        if (settingsParent != null)
-            ModdedSettingsMenu.Instance?.MainPage.SetParentPage(settingsParent);
-
-        if (controlsParent != null)
-            ModdedControlsMenu.Instance?.MainPage.SetParentPage(controlsParent);
+                .AddLocalization("MOD KONTROLLER", Language.Turkish); */
     }
 
     private static bool modSettingsLoaded = false;
@@ -436,7 +322,6 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             return;
 
         EntriesProcessed = [];
-        ModdedKeys = [];
         modSettingsLoaded = true;
 
         ProcessModEntries();
@@ -500,8 +385,6 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                         //checking if default value matches key path pattern
                         if (isInputPath)
                         {
-                            ModKeyToName item = new(configEntry, modName);
-                            ModdedKeys.Add(item);
                             SettingsHandlerUtility.AddKeyPathToTab(
                                 configEntry,
                                 modName,
@@ -537,12 +420,6 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     }
                     else if (configEntry.SettingType == typeof(KeyCode))
                     {
-                        if (configEntry is ConfigEntry<KeyCode> entry)
-                        {
-                            ModKeyToName item = new(entry, modName);
-                            ModdedKeys.Add(item);
-                        }
-
                         SettingsHandlerUtility.AddKeybindToTab(
                             configEntry,
                             modName,

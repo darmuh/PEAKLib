@@ -5,6 +5,9 @@ using PEAKLib.Core;
 using PEAKLib.UI.Elements;
 using PEAKLib.UI.Elements.Settings;
 using UnityEngine;
+using Zorro.Core;
+using Zorro.Settings;
+using Zorro.Settings.UI;
 using Zorro.UI;
 using Object = UnityEngine.Object;
 
@@ -18,6 +21,7 @@ public static class MenuAPI
     internal static BuilderDelegate? pauseMenuBuilderDelegate,
         mainMenuBuilderDelegate,
         settingsMenuBuilderDelegate,
+        settingsMenuBuilderDelegateNEW,
         controlsMenuBuilderDelegate;
 
     /// <summary>
@@ -41,11 +45,20 @@ public static class MenuAPI
         pauseMenuBuilderDelegate += builderDelegate;
 
     /// <summary>
+    /// Old method to add element(s) to Setting Menus
+    /// Recommended to use newer delegate source, <see cref="AddToSettingsMenus(BuilderDelegate)"/>
+    /// </summary>
+    /// <param name="builderDelegate"></param>
+    [Obsolete("This will still work but it's recommended to use the newer delegate source in AddToSettingsMenus")]
+    public static void AddToSettingsMenu(BuilderDelegate builderDelegate) =>
+        settingsMenuBuilderDelegate += builderDelegate;
+
+    /// <summary>
     /// Add element(s) to Setting Menu
     /// </summary>
     /// <param name="builderDelegate"></param>
-    public static void AddToSettingsMenu(BuilderDelegate builderDelegate) =>
-        settingsMenuBuilderDelegate += builderDelegate;
+    public static void AddToSettingsMenus(BuilderDelegate builderDelegate) =>
+        settingsMenuBuilderDelegateNEW += builderDelegate;
 
     /// <summary>
     /// Add element(s) to Controls Menu
@@ -329,5 +342,27 @@ public static class MenuAPI
             SettingsHandler.Instance.AddSetting(setting);
 
         return setting;
+    }
+
+    /// <summary>
+    /// Create a dropdown UI element based on the dropdown prefab from the settings menu
+    /// <param name="dropdownName"></param>
+    /// <param name="parent"></param>
+    /// </summary>
+    public static PeakDropdown CreateDropdown(string dropdownName, Transform parent)
+    {
+        ThrowHelper.ThrowIfFieldNull(dropdownName);
+
+        if (SingletonAsset<InputCellMapper>.Instance.EnumSettingCell == null)
+            throw new System.Exception(
+                "You're creating Dropdown too early! Prefab hasn't been loaded yet."
+            );
+
+        // size of dropdown is not working for whatever reason
+        var clone = Object.Instantiate(SingletonAsset<InputCellMapper>.Instance.EnumSettingCell, parent);
+        Object.DestroyImmediate(clone.GetComponent<EnumSettingUI>());
+        clone.name = $"UI_PeakDropdown_{dropdownName}";
+        var newDropdown = clone.AddComponent<PeakDropdown>();
+        return newDropdown;
     }
 }

@@ -1,7 +1,11 @@
 ﻿using System;
 using BepInEx.Configuration;
+using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using Unity.Mathematics;
+using UnityEngine;
+using Zorro.Core;
 using Zorro.Settings;
+using Zorro.Settings.UI;
 using static PEAKLib.ModConfig.SettingsHandlerUtility;
 
 namespace PEAKLib.ModConfig.SettingOptions;
@@ -17,6 +21,40 @@ internal class BepInExFloat(
     {
         get => entryBase;
     }
+
+    private static GameObject? _settingUICell = null;
+    public static GameObject? SettingUICell
+    {
+        get
+        {
+            if (_settingUICell == null)
+            {
+                if (
+                    SingletonAsset<InputCellMapper>.Instance == null
+                    || SingletonAsset<InputCellMapper>.Instance.FloatSettingCell == null
+                )
+                    return null;
+
+                _settingUICell = UnityEngine.Object.Instantiate(
+                    SingletonAsset<InputCellMapper>.Instance.FloatSettingCell
+                );
+                _settingUICell.name = "BepInExFloatCell";
+
+                var original = _settingUICell.GetComponent<FloatSettingUI>();
+                var replace = _settingUICell.AddComponent<BepInExFloat_SettingUI>();
+
+                replace.slider = original.slider;
+                replace.inputField = original.inputField;
+
+                UnityEngine.Object.DestroyImmediate(original);
+                UnityEngine.Object.DontDestroyOnLoad(_settingUICell);
+            }
+
+            return _settingUICell;
+        }
+    }
+
+    public override GameObject? GetSettingUICell() => SettingUICell;
 
     public override void Load(ISettingsSaveLoad loader)
     {
@@ -45,5 +83,11 @@ internal class BepInExFloat(
             return new(minValue, maxValue);
 
         return new(0f, 1000f);
+    }
+
+    public void SetDefaultValue()
+    {
+        SetBoxedValue(entryBase, GetDefaultValue());
+        RefreshValueFromConfig();
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using UnityEngine;
 using UnityEngine.Localization;
 using Zorro.Core;
 using Zorro.Settings;
+using Zorro.Settings.UI;
 using static PEAKLib.ModConfig.SettingsHandlerUtility;
 
 namespace PEAKLib.ModConfig.SettingOptions;
@@ -21,6 +23,39 @@ internal class BepInExEnum(
     {
         get => entryBase;
     }
+
+    private static GameObject? _settingUICell = null;
+    public static GameObject? SettingUICell
+    {
+        get
+        {
+            if (_settingUICell == null)
+            {
+                if (
+                    SingletonAsset<InputCellMapper>.Instance == null
+                    || SingletonAsset<InputCellMapper>.Instance.EnumSettingCell == null
+                )
+                    return null;
+
+                _settingUICell = UnityEngine.Object.Instantiate(
+                    SingletonAsset<InputCellMapper>.Instance.EnumSettingCell
+                );
+                _settingUICell.name = "BepInExEnumCell";
+
+                var original = _settingUICell.GetComponent<EnumSettingUI>();
+                var replace = _settingUICell.AddComponent<BepInExEnum_SettingUI>();
+
+                replace.dropdown = original.dropdown;
+
+                UnityEngine.Object.DestroyImmediate(original);
+                UnityEngine.Object.DontDestroyOnLoad(_settingUICell);
+            }
+
+            return _settingUICell;
+        }
+    }
+
+    public override GameObject? GetSettingUICell() => SettingUICell;
 
     public string GetDisplayName() => entryBase.Definition.Key;
 
@@ -47,9 +82,6 @@ internal class BepInExEnum(
     }
 
     public override void Save(ISettingsSaveLoad saver) => saveCallback?.Invoke(Value);
-
-    public override GameObject GetSettingUICell() =>
-        SingletonAsset<InputCellMapper>.Instance.EnumSettingCell;
 
     public virtual List<string> GetUnlocalizedChoices()
     {
@@ -80,6 +112,20 @@ internal class BepInExEnum(
     }
 
     public override void ApplyValue() => onApply?.Invoke(this);
+
+    public string GetDefaultValue()
+    {
+        if (isEnum)
+            return Enum.GetName(entryBase.SettingType, entryBase.DefaultValue);
+        else
+            return GetDefaultValue<string>(entryBase);
+    }
+
+    public void SetDefaultValue()
+    {
+        int val = GetUnlocalizedChoices().IndexOf(GetDefaultValue());
+        SetValue(val, SettingsHandler.Instance, false);
+    }
 
     public override Zorro.Settings.DebugUI.SettingUI GetDebugUI(ISettingHandler settingHandler) =>
         null!;

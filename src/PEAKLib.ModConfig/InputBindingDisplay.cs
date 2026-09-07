@@ -72,6 +72,30 @@ internal static class InputBindingDisplay
         }
     }
 
+    public static string GetSpriteTagText(KeyCode keyCode)
+    {
+        InputSpriteData spriteData = InputSpriteData.Instance;
+        string keyName = keyCode.ToString();
+
+        if (keyName.StartsWith("Joystick", StringComparison.Ordinal))
+            return keyName;
+
+        return GetKeyboardSpriteTag(spriteData, keyCode);
+    }
+
+    public static string GetSpriteTagText(string keyPath)
+    {
+        InputSpriteData spriteData = InputSpriteData.Instance;
+        return InputBindingPath.GetDevice(keyPath) switch
+        {
+            InputBindingDevice.Keyboard => spriteData.GetSpriteTagFromInputPathKeyboard(keyPath),
+            InputBindingDevice.Mouse => spriteData.GetSpriteTagFromInputPathKeyboard(keyPath),
+            InputBindingDevice.Gamepad => spriteData.GetSpriteTagFromInputPathGamepad(keyPath),
+            InputBindingDevice.Unsupported => keyPath,
+            _ => keyPath,
+        };
+    }
+
     private static void SetSpriteOrRaw(
         TMP_Text text,
         TMP_SpriteAsset spriteAsset,

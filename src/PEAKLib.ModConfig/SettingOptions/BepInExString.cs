@@ -1,5 +1,7 @@
 ﻿using System;
 using BepInEx.Configuration;
+using PEAKLib.UI;
+using PEAKLib.UI.Elements;
 using TMPro;
 using UnityEngine;
 using Zorro.Core;
@@ -86,21 +88,38 @@ internal class BepInExString(
     protected override string GetDefaultValue() => GetDefaultValue<string>(entryBase);
 
     public void RefreshValueFromConfig() => Value = GetCurrentValue<string>(entryBase);
+
+    public void SetDefaultValue()
+    {
+        Value = GetDefaultValue();
+        SetBoxedValue(entryBase, Value);
+        OnSettingChangedExternal();
+    }
+    public void ClearValue()
+    {
+        Value = string.Empty;
+        SetBoxedValue(entryBase, Value);
+        OnSettingChangedExternal();
+    }
 }
 
 public class StringSettingUI : SettingInputUICell
 {
+    public PeakMenuButton SetDefaultButton { get; internal set; } = null!;
+    public PeakMenuButton ClearBindButton { get; internal set; } = null!;
+    public Setting KeySetting { get; set; } = null!;
     public TMP_InputField? inputField;
 
     public override void Setup(Setting setting, ISettingHandler settingHandler)
     {
-        if (setting == null || setting is not BepInExString stringSetting)
+        if (inputField == null || setting == null || setting is not BepInExString stringSetting)
             return;
+
+        KeySetting = setting;
+        AddDefaultButton();
+        AddClearButton();
 
         RegisterSettingListener(setting);
-
-        if (inputField == null)
-            return;
 
         inputField.SetTextWithoutNotify(stringSetting.Value);
         inputField.onValueChanged.AddListener(OnChanged);
@@ -116,6 +135,59 @@ public class StringSettingUI : SettingInputUICell
         foreach (var text in texts)
             if (text.name == "Placeholder")
                 text.text = stringSetting.PlaceholderText;
+    }
+
+    private void AddDefaultButton()
+    {
+        SetDefaultButton = MenuAPI.CreateMenuButton("DefaultsButton")
+        .ParentTo(transform)
+        .SetSize(new(90f, 20f))
+        .SetAnchorMin(new(0.5f, 0.5f))
+        .SetAnchorMax(new(0.5f, 0.5f))
+        .SetPosition(new(186f, 12f))
+        .OnClick(SetDefaultValue)
+        .SetText("DEFAULT")
+        .SetBorderColor(Color.white)
+        .SetColor(Color.dodgerBlue);
+
+        SetDefaultButton.Text.rectTransform.offsetMin = new(10f, 10f);
+        SetDefaultButton.Text.rectTransform.offsetMax = new(-10f, -10f);
+        SetDefaultButton.Text.fontSizeMax = 16f;
+        SetDefaultButton.Text.fontSizeMin = 16f;
+    }
+
+    private void AddClearButton()
+    {
+        ClearBindButton = MenuAPI.CreateMenuButton("ClearButton")
+        .ParentTo(transform)
+        .SetSize(new(90f, 20f))
+        .SetAnchorMin(new(0.5f, 0.5f))
+        .SetAnchorMax(new(0.5f, 0.5f))
+        .SetPosition(new(186f, -14f))
+        .OnClick(ClearValue)
+        .SetText("CLEAR");
+
+        ClearBindButton.Text.rectTransform.offsetMin = new(10f, 10f);
+        ClearBindButton.Text.rectTransform.offsetMax = new(-10f, -10f);
+        ClearBindButton.Text.fontSizeMax = 16f;
+        ClearBindButton.Text.fontSizeMin = 16f;
+    }
+
+    private void ClearValue()
+    {
+        if (KeySetting is not BepInExString bepString)
+            return;
+
+        bepString.ClearValue();
+    }
+
+    private void SetDefaultValue()
+    {
+        if (KeySetting is not IBepInExProperty bep)
+            return;
+
+        bep.SetDefaultValue();
+        OnSettingChangedExternal(KeySetting);
     }
 
     protected override void OnSettingChangedExternal(Setting setting)

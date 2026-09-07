@@ -15,7 +15,7 @@ internal class ModdedTABSButton : TAB_Button
             Selected ? Color.black : Color.white,
             Time.unscaledDeltaTime * 7f
         );
-        if (SelectedGraphic != null)
-            SelectedGraphic.gameObject.SetActive(Selected);
+
+        SelectedGraphic?.gameObject.SetActive(Selected);
     }
 }

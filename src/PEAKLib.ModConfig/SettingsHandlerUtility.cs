@@ -136,6 +136,12 @@ internal static class SettingsHandlerUtility
         return (T)entry.BoxedValue;
     }
 
+    public static void SetBoxedValue<T>(ConfigEntryBase entry, T value)
+    {
+        if (entry is ConfigEntry<T> configEntry)
+            configEntry.Value = value;
+    }
+
     public static List<T> GetAcceptableValues<T>(ConfigEntryBase entry)
         where T : IEquatable<T>
     {

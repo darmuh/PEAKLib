@@ -16,6 +16,8 @@ internal abstract class BepInExInputBindingSetting<TValue>(
 
     public TValue Value { get; private set; } = GetCurrentValue<TValue>(entryBase);
 
+    public TValue DefaultValue { get; private set; } = GetDefaultValue<TValue>(entryBase);
+
     public override void Load(ISettingsSaveLoad loader) => RefreshValueFromConfig();
 
     public override void Save(ISettingsSaveLoad saver) => saveCallback?.Invoke(Value);
@@ -35,4 +37,6 @@ internal abstract class BepInExInputBindingSetting<TValue>(
         ApplyValue();
         settingHandler.SaveSetting(this);
     }
+
+    public void SetDefaultValue() => SetBoxedValue(entryBase, GetDefaultValue<TValue>(entryBase));
 }

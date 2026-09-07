@@ -56,4 +56,6 @@ internal class BepInExDouble(
 
         return new(0f, 1000f);
     }
+
+    public void SetDefaultValue() => SetBoxedValue(entryBase, GetDefaultValue());
 }

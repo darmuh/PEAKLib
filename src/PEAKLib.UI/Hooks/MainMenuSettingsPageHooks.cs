@@ -15,6 +15,7 @@ static class MainMenuSettingsPageHooks
 
     static void Prefix_Start(MainMenuSettingsPage self)
     {
+        MenuAPI.settingsMenuBuilderDelegateNEW?.Invoke(self.transform);
         MenuAPI.settingsMenuBuilderDelegate?.Invoke(self.transform);
 
         var selector = self.GetComponentInParent<MainMenuPageSelector>();

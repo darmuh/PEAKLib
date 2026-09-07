@@ -8,4 +8,18 @@ internal interface IBepInExProperty
     internal ConfigEntryBase ConfigBase { get; }
 
     internal void RefreshValueFromConfig();
+    internal void SetDefaultValue();
+
+    internal string GetDisplayName();
+    internal string GetCategory();
+
+    internal T GetKeyValue<T>()
+    {
+        return (T)ConfigBase.BoxedValue;
+    }
+
+    internal T GetDefaultValue<T>()
+    {
+        return (T)ConfigBase.DefaultValue;
+    }
 }
