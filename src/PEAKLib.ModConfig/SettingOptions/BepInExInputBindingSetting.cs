@@ -11,7 +11,7 @@ internal abstract class BepInExInputBindingSetting<TValue>(
     Action<TValue>? saveCallback
 ) : Setting, IBepInExProperty, IExposedSetting
 {
-    ConfigEntryBase IBepInExProperty.ConfigBase => entryBase;
+    public ConfigEntryBase ConfigBase => entryBase;
 
     public TValue Value { get; private set; } = GetCurrentValue<TValue>(entryBase);
 
