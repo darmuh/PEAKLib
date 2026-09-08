@@ -75,6 +75,7 @@ internal class BepInExOffOn(
     public string GetCategory() => category;
 
     public override List<LocalizedString>? GetLocalizedChoices() => null;
+
     public void SetDefaultValue()
     {
         SetBoxedValue(entryBase, GetDefaultValue<bool>(entryBase));

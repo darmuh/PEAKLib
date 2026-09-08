@@ -27,6 +27,7 @@ internal class BepInExKeyCode(
     }
 
     public override void ApplyValue() => onApply?.Invoke(this);
+
     internal ConfigEntryBase ConfigBase => entryBase;
 
     public override GameObject? GetSettingUICell() => SettingUICell;

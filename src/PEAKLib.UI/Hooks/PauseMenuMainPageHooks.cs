@@ -8,7 +8,6 @@ namespace PEAKLib.UI.Hooks;
 [MonoDetourTargets(typeof(PauseMenuMainPage))]
 static class PauseMenuMainPageHooks
 {
-
     [MonoDetourHookInitialize]
     static void Init()
     {

@@ -86,12 +86,19 @@ internal static class InputBindingDisplay
     }
 
     // used to compare only matching device type sprites
-    public static bool CompareVanillaToSprite(string spriteTag, string keyPath, InputBindingDevice spriteDevice)
+    public static bool CompareVanillaToSprite(
+        string spriteTag,
+        string keyPath,
+        InputBindingDevice spriteDevice
+    )
     {
         var keyPathDevice = InputBindingPath.GetDevice(keyPath);
         List<InputBindingDevice> kbm = [InputBindingDevice.Keyboard, InputBindingDevice.Mouse];
 
-        if (spriteDevice == keyPathDevice || (kbm.Contains(spriteDevice) && kbm.Contains(keyPathDevice)))
+        if (
+            spriteDevice == keyPathDevice
+            || (kbm.Contains(spriteDevice) && kbm.Contains(keyPathDevice))
+        )
         {
             return spriteTag == GetSpriteTagText(keyPath);
         }

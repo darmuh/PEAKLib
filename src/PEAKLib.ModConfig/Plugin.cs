@@ -77,9 +77,12 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             if (mainMenuHandler == null && pauseMenuHandler == null)
                 throw new Exception("Failed to get a UIPageHandler");
 
-            settingsParent =
-                (mainMenuHandler?.GetPage<MainMenuSettingsPage>()
-                ?? pauseMenuHandler?.transform.Find("SettingsPage")?.GetComponent<PauseMenuSettingsMenuPage>());
+            settingsParent = (
+                mainMenuHandler?.GetPage<MainMenuSettingsPage>()
+                ?? pauseMenuHandler
+                    ?.transform.Find("SettingsPage")
+                    ?.GetComponent<PauseMenuSettingsMenuPage>()
+            );
 
             ThrowHelper.ThrowIfArgumentNull(settingsParent);
             ThrowHelper.ThrowIfArgumentNull(ModSettingsLoc);
@@ -135,7 +138,8 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             var settingsMenu = content.gameObject.AddComponent<ModSettingsMenu>();
             settingsMenu.MainPage = modSettingsPage;
 
-            settingsMenu.FilterDropdown = MenuAPI.CreateDropdown("Settings Filter", settingsMenu.transform)
+            settingsMenu.FilterDropdown = MenuAPI
+                .CreateDropdown("Settings Filter", settingsMenu.transform)
                 .SetOptions(["Bools", "Strings", "Numbers", "Enums", "Controls"])
                 .SetLabelColor(Color.wheat)
                 .SetBackgroundColor(Color.slateBlue)
@@ -253,7 +257,10 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     ModSettingsMenu.Instance.FilterDropdown.Dropdown.value = 16;
                     ModSettingsMenu.Instance.FilterValue = 16;
                     ModSettingsMenu.Instance.MainPage.SetParentPage(controlsParent);
-                    pauseMenuHandler?.TransistionToPage(ModSettingsMenu.Instance.MainPage, new SetActivePageTransistion());
+                    pauseMenuHandler?.TransistionToPage(
+                        ModSettingsMenu.Instance.MainPage,
+                        new SetActivePageTransistion()
+                    );
                 });
         }
 
@@ -261,7 +268,6 @@ public partial class ModConfigPlugin : BaseUnityPlugin
         MenuAPI.AddToSettingsMenus(builderDelegate);
         //controls menu builder
         MenuAPI.AddToControlsMenu(modControls);
-
     }
 
     private static void LoadModConfigLocalizations()
@@ -271,24 +277,24 @@ public partial class ModConfigPlugin : BaseUnityPlugin
         // Vanilla Settings Localization:   SETTINGS,SETTINGS,PARAMÈTRES,IMPOSTAZIONI,EINSTELLUNGEN,AJUSTES,AJUSTES,CONFIGURAÇÕES,НАСТРОЙКИ,НАЛАШТУВАННЯ,设置,設定,設定,설정,USTAWIENIA,AYARLAR,ENDLINE
 
         // Below translations are best effort, if a better translation exists please feel free to offer corrections
-        
+
         ModSettingsLoc = MenuAPI
-                .CreateLocalization("MOD SETTINGS")
-                .AddLocalization("MOD SETTINGS", Language.English)
-                .AddLocalization("PARAMÈTRES DU MOD", Language.French)
-                .AddLocalization("IMPOSTAZIONI MOD", Language.Italian)
-                .AddLocalization("MOD-EINSTELLUNGEN", Language.German)
-                .AddLocalization("AJUSTES DEL MOD", Language.SpanishSpain)
-                .AddLocalization("CONFIGURACIONES DEL MOD", Language.SpanishLatam)
-                .AddLocalization("CONFIGURAÇÕES DE MOD", Language.BRPortuguese)
-                .AddLocalization("НАСТРОЙКИ МОДА", Language.Russian)
-                .AddLocalization("НАЛАШТУВАННЯ МОДА", Language.Ukrainian)
-                .AddLocalization("模组设置", Language.SimplifiedChinese)
-                .AddLocalization("模組設定", Language.TraditionalChinese)
-                .AddLocalization("MOD設定", Language.Japanese)
-                .AddLocalization("모드 설정", Language.Korean)
-                .AddLocalization("USTAWIENIA MODÓW", Language.Polish)
-                .AddLocalization("MOD AYARLAR", Language.Turkish);
+            .CreateLocalization("MOD SETTINGS")
+            .AddLocalization("MOD SETTINGS", Language.English)
+            .AddLocalization("PARAMÈTRES DU MOD", Language.French)
+            .AddLocalization("IMPOSTAZIONI MOD", Language.Italian)
+            .AddLocalization("MOD-EINSTELLUNGEN", Language.German)
+            .AddLocalization("AJUSTES DEL MOD", Language.SpanishSpain)
+            .AddLocalization("CONFIGURACIONES DEL MOD", Language.SpanishLatam)
+            .AddLocalization("CONFIGURAÇÕES DE MOD", Language.BRPortuguese)
+            .AddLocalization("НАСТРОЙКИ МОДА", Language.Russian)
+            .AddLocalization("НАЛАШТУВАННЯ МОДА", Language.Ukrainian)
+            .AddLocalization("模组设置", Language.SimplifiedChinese)
+            .AddLocalization("模組設定", Language.TraditionalChinese)
+            .AddLocalization("MOD設定", Language.Japanese)
+            .AddLocalization("모드 설정", Language.Korean)
+            .AddLocalization("USTAWIENIA MODÓW", Language.Polish)
+            .AddLocalization("MOD AYARLAR", Language.Turkish);
 
         // Not used, perhaps will in the future so leaving these comments
         /*

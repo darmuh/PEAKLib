@@ -95,6 +95,7 @@ internal class BepInExString(
         SetBoxedValue(entryBase, Value);
         OnSettingChangedExternal();
     }
+
     public void ClearValue()
     {
         Value = string.Empty;
@@ -139,16 +140,17 @@ public class StringSettingUI : SettingInputUICell
 
     private void AddDefaultButton()
     {
-        SetDefaultButton = MenuAPI.CreateMenuButton("DefaultsButton")
-        .ParentTo(transform)
-        .SetSize(new(90f, 20f))
-        .SetAnchorMin(new(0.5f, 0.5f))
-        .SetAnchorMax(new(0.5f, 0.5f))
-        .SetPosition(new(186f, 12f))
-        .OnClick(SetDefaultValue)
-        .SetText("DEFAULT")
-        .SetBorderColor(Color.white)
-        .SetColor(Color.dodgerBlue);
+        SetDefaultButton = MenuAPI
+            .CreateMenuButton("DefaultsButton")
+            .ParentTo(transform)
+            .SetSize(new(90f, 20f))
+            .SetAnchorMin(new(0.5f, 0.5f))
+            .SetAnchorMax(new(0.5f, 0.5f))
+            .SetPosition(new(186f, 12f))
+            .OnClick(SetDefaultValue)
+            .SetText("DEFAULT")
+            .SetBorderColor(Color.white)
+            .SetColor(Color.dodgerBlue);
 
         SetDefaultButton.Text.rectTransform.offsetMin = new(10f, 10f);
         SetDefaultButton.Text.rectTransform.offsetMax = new(-10f, -10f);
@@ -158,14 +160,15 @@ public class StringSettingUI : SettingInputUICell
 
     private void AddClearButton()
     {
-        ClearBindButton = MenuAPI.CreateMenuButton("ClearButton")
-        .ParentTo(transform)
-        .SetSize(new(90f, 20f))
-        .SetAnchorMin(new(0.5f, 0.5f))
-        .SetAnchorMax(new(0.5f, 0.5f))
-        .SetPosition(new(186f, -14f))
-        .OnClick(ClearValue)
-        .SetText("CLEAR");
+        ClearBindButton = MenuAPI
+            .CreateMenuButton("ClearButton")
+            .ParentTo(transform)
+            .SetSize(new(90f, 20f))
+            .SetAnchorMin(new(0.5f, 0.5f))
+            .SetAnchorMax(new(0.5f, 0.5f))
+            .SetPosition(new(186f, -14f))
+            .OnClick(ClearValue)
+            .SetText("CLEAR");
 
         ClearBindButton.Text.rectTransform.offsetMin = new(10f, 10f);
         ClearBindButton.Text.rectTransform.offsetMax = new(-10f, -10f);

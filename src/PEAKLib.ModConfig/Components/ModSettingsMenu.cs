@@ -88,60 +88,67 @@ internal class ModSettingsMenu : MonoBehaviour
 
         var isSearching = !string.IsNullOrEmpty(search);
 
-        var listing = settings.Where(setting => setting is not IConditionalSetting conditionalSetting || conditionalSetting.ShouldShow());
+        var listing = settings.Where(setting =>
+            setting is not IConditionalSetting conditionalSetting || conditionalSetting.ShouldShow()
+        );
 
         // cull items not matching search
         if (isSearching)
-            listing = listing.Where(setting => setting.GetDisplayName()?.ToLower()?.Contains(search) == true);
+            listing = listing.Where(setting =>
+                setting.GetDisplayName()?.ToLower()?.Contains(search) == true
+            );
 
         if (!ShouldUseFilterResults(listing, out var beplisting))
             return;
 
-            foreach (IBepInExProperty item in beplisting)
+        foreach (IBepInExProperty item in beplisting)
+        {
+            if (Templates.SettingsCellPrefab == null)
             {
-                if (Templates.SettingsCellPrefab == null)
-                {
-                    ModConfigPlugin.Log.LogError("SettingsCellPrefab has not been loaded.");
-                    return;
-                }
-
-                if (item is not Setting setting)
-                {
-                    ModConfigPlugin.Log.LogError("Invalid IExposedSetting");
-                    continue;
-                }
-
-                if (!string.IsNullOrEmpty(selectedSection)) //skip if selected section is empty/null
-                {
-                    //update assigned value from configbase
-                    item.RefreshValueFromConfig();
-                }
-
-                SettingsUICell component = Instantiate(Templates.SettingsCellPrefab, Content)
-                    .GetComponent<SettingsUICell>();
-                m_spawnedCells.Add(component);
-
-                // component.Setup(item as Setting);
-                // temporary fix - uncomment component.Setup and remove the region when they set printDebug default to false in LocalizedText.GetText(string id, bool printDebug = true)
-
-                #region temporary fix
-                component.m_text.text = item.GetDisplayName();
-                component.m_canvasGroup = component.GetComponent<CanvasGroup>();
-                component.m_canvasGroup.alpha = 0f;
-
-                Instantiate(setting.GetSettingUICell(), component.m_settingsContentParent)
-                    .GetComponent<SettingInputUICell>()
-                    .Setup(setting, GameHandler.Instance.SettingsHandler);
-                #endregion
+                ModConfigPlugin.Log.LogError("SettingsCellPrefab has not been loaded.");
+                return;
             }
 
-            // get duplicate bindings
-            InputBindingSettingUI.RefreshDuplicates();
-        
+            if (item is not Setting setting)
+            {
+                ModConfigPlugin.Log.LogError("Invalid IExposedSetting");
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(selectedSection)) //skip if selected section is empty/null
+            {
+                //update assigned value from configbase
+                item.RefreshValueFromConfig();
+            }
+
+            SettingsUICell component = Instantiate(Templates.SettingsCellPrefab, Content)
+                .GetComponent<SettingsUICell>();
+            m_spawnedCells.Add(component);
+
+            // component.Setup(item as Setting);
+            // temporary fix - uncomment component.Setup and remove the region when they set printDebug default to false in LocalizedText.GetText(string id, bool printDebug = true)
+
+            #region temporary fix
+            component.m_text.text = item.GetDisplayName();
+            component.m_canvasGroup = component.GetComponent<CanvasGroup>();
+            component.m_canvasGroup.alpha = 0f;
+
+            Instantiate(setting.GetSettingUICell(), component.m_settingsContentParent)
+                .GetComponent<SettingInputUICell>()
+                .Setup(setting, GameHandler.Instance.SettingsHandler);
+            #endregion
+        }
+
+        // get duplicate bindings
+        InputBindingSettingUI.RefreshDuplicates();
+
         m_fadeInCoroutine = StartCoroutine(FadeInCells());
     }
 
-    private bool ShouldUseFilterResults(IEnumerable<IBepInExProperty> listing, out IEnumerable<IBepInExProperty> outListing)
+    private bool ShouldUseFilterResults(
+        IEnumerable<IBepInExProperty> listing,
+        out IEnumerable<IBepInExProperty> outListing
+    )
     {
         // set to initially provided listing
         outListing = listing;
@@ -167,11 +174,15 @@ internal class ModSettingsMenu : MonoBehaviour
         var numbersEnabled = ((FilterValue & (1 << 2)) != 0);
         var enumsEnabled = ((FilterValue & (1 << 3)) != 0);
         var controlsEnabled = ((FilterValue & (1 << 4)) != 0);
-        ModConfigPlugin.Log.LogDebug($"bools:{boolsEnabled},strings:{stringsEnabled},numbers:{numbersEnabled},enums:{enumsEnabled},controls:{controlsEnabled}");
+        ModConfigPlugin.Log.LogDebug(
+            $"bools:{boolsEnabled},strings:{stringsEnabled},numbers:{numbersEnabled},enums:{enumsEnabled},controls:{controlsEnabled}"
+        );
 
         // cull items not matching each filter item
         if (!boolsEnabled)
-            beplisting = beplisting.Where(setting => setting.ConfigBase.SettingType != typeof(bool));
+            beplisting = beplisting.Where(setting =>
+                setting.ConfigBase.SettingType != typeof(bool)
+            );
 
         // typeof(string) will include strings with acceptable values, so use BepInExString type instead
         if (!stringsEnabled)
@@ -179,13 +190,17 @@ internal class ModSettingsMenu : MonoBehaviour
 
         System.Type[] nums = [typeof(int), typeof(float), typeof(double)];
         if (!numbersEnabled)
-            beplisting = beplisting.Where(setting => !nums.Any(x => setting.ConfigBase.SettingType == x));
+            beplisting = beplisting.Where(setting =>
+                !nums.Any(x => setting.ConfigBase.SettingType == x)
+            );
 
         if (!enumsEnabled)
             beplisting = beplisting.Where(setting => setting is not BepInExEnum);
 
         if (!controlsEnabled)
-            beplisting = beplisting.Where(setting => setting is not BepInExKeyPath && setting.ConfigBase.SettingType != typeof(KeyCode));
+            beplisting = beplisting.Where(setting =>
+                setting is not BepInExKeyPath && setting.ConfigBase.SettingType != typeof(KeyCode)
+            );
 
         // --- Filter End
 
@@ -197,12 +212,19 @@ internal class ModSettingsMenu : MonoBehaviour
         }
 
         // get section settings, don't update beplisting yet so we can compare this to it later
-        var thisSection = beplisting.Where(setting => setting.ConfigBase.Definition.Section.Equals(selectedSection, StringComparison.InvariantCultureIgnoreCase));
+        var thisSection = beplisting.Where(setting =>
+            setting.ConfigBase.Definition.Section.Equals(
+                selectedSection,
+                StringComparison.InvariantCultureIgnoreCase
+            )
+        );
 
         // switch to first section with valid definition (if possible) and end here
         if (!thisSection.Any() && SectionTabController.Tabs.Any(tab => tab.name != selectedSection))
         {
-            var newCat = SectionTabController.Tabs.FirstOrDefault(x => beplisting.Any(bep => bep.ConfigBase.Definition.Section == x.name));
+            var newCat = SectionTabController.Tabs.FirstOrDefault(x =>
+                beplisting.Any(bep => bep.ConfigBase.Definition.Section == x.name)
+            );
             if (newCat != null)
             {
                 ModConfigPlugin.Log.LogDebug($"Updating category to {newCat.name}");
@@ -249,7 +271,7 @@ internal class ModSettingsMenu : MonoBehaviour
             if (key.ToString().StartsWith("Joystick", StringComparison.Ordinal))
                 deviceType = InputBindingDevice.Gamepad; // this is the only time keycode changes from kbm
         }
-            
+
         if (itemIsPath)
         {
             string keyPath = item.GetKeyValue<string>();
@@ -292,7 +314,13 @@ internal class ModSettingsMenu : MonoBehaviour
                 if (bind.action.Equals("AnyKey", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (InputBindingDisplay.CompareVanillaToSprite(keyvalue, bind.effectivePath, deviceType))
+                if (
+                    InputBindingDisplay.CompareVanillaToSprite(
+                        keyvalue,
+                        bind.effectivePath,
+                        deviceType
+                    )
+                )
                     matchingvanilla.Add(bind.action);
             }
         }
@@ -309,9 +337,10 @@ internal class ModSettingsMenu : MonoBehaviour
     {
         if (GameHandler.Instance != null)
         {
-            var exposedsettings = GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>();
+            var exposedsettings =
+                GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>();
             settings = [.. exposedsettings.Where(setting => setting.ConfigBase != null)]; // fix for autoreload mods?
-        }       
+        }
     }
 
     public void UpdateSectionTabs(string modName)

@@ -18,7 +18,7 @@ namespace PEAKLib.UI.Elements
         /// The dropdown component
         /// </summary>
         public TMP_Dropdown Dropdown { get; private set; }
-        
+
         /// <summary>
         /// The background image component of the dropdown
         /// </summary>
@@ -55,7 +55,6 @@ namespace PEAKLib.UI.Elements
 
             var arrowtransform = dropdownTransform.Find("Arrow");
             Arrow = arrowtransform.GetComponent<Image>();
-
 
             // Needed to ensure dropdown size/position information is unaffected by other existing layouts
             VerticalLayout = gameObject.AddComponent<VerticalLayoutGroup>();
@@ -176,6 +175,5 @@ namespace PEAKLib.UI.Elements
 
             return this;
         }
-
     }
 }

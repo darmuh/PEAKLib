@@ -46,16 +46,17 @@ internal abstract class InputBindingSettingUI : SettingInputUICell
 
     private void SetupDefaultButton()
     {
-        SetDefaultButton = MenuAPI.CreateMenuButton("DefaultsButton")
-        .ParentTo(transform)
-        .SetSize(new(90f, 20f))
-        .SetAnchorMin(new(0.5f, 0.5f))
-        .SetAnchorMax(new(0.5f, 0.5f))
-        .SetPosition(new(186f, 12f))
-        .OnClick(SetDefaultValue)
-        .SetText("DEFAULT")
-        .SetBorderColor(Color.white)
-        .SetColor(Color.dodgerBlue);
+        SetDefaultButton = MenuAPI
+            .CreateMenuButton("DefaultsButton")
+            .ParentTo(transform)
+            .SetSize(new(90f, 20f))
+            .SetAnchorMin(new(0.5f, 0.5f))
+            .SetAnchorMax(new(0.5f, 0.5f))
+            .SetPosition(new(186f, 12f))
+            .OnClick(SetDefaultValue)
+            .SetText("DEFAULT")
+            .SetBorderColor(Color.white)
+            .SetColor(Color.dodgerBlue);
 
         SetDefaultButton.Text.rectTransform.offsetMin = new(10f, 10f);
         SetDefaultButton.Text.rectTransform.offsetMax = new(-10f, -10f);
@@ -65,14 +66,15 @@ internal abstract class InputBindingSettingUI : SettingInputUICell
 
     private void SetupClearButton()
     {
-        ClearBindButton = MenuAPI.CreateMenuButton("ClearButton")
-        .ParentTo(transform)
-        .SetSize(new(90f, 20f))
-        .SetAnchorMin(new(0.5f, 0.5f))
-        .SetAnchorMax(new(0.5f, 0.5f))
-        .SetPosition(new(186f, -14f))
-        .OnClick(ClearValue)
-        .SetText("CLEAR");
+        ClearBindButton = MenuAPI
+            .CreateMenuButton("ClearButton")
+            .ParentTo(transform)
+            .SetSize(new(90f, 20f))
+            .SetAnchorMin(new(0.5f, 0.5f))
+            .SetAnchorMax(new(0.5f, 0.5f))
+            .SetPosition(new(186f, -14f))
+            .OnClick(ClearValue)
+            .SetText("CLEAR");
 
         ClearBindButton.Text.rectTransform.offsetMin = new(10f, 10f);
         ClearBindButton.Text.rectTransform.offsetMax = new(-10f, -10f);
@@ -88,6 +90,7 @@ internal abstract class InputBindingSettingUI : SettingInputUICell
         rect.sizeDelta = new(600f, 0);
         DuplicateWarningText = component.GetComponent<TextMeshProUGUI>();
     }
+
     internal static void RefreshDuplicates()
     {
         foreach (var item in Cells)
@@ -115,7 +118,6 @@ internal abstract class InputBindingSettingUI : SettingInputUICell
             else
                 DuplicateWarningText.gameObject.SetActive(false);
         }
-            
     }
 
     protected void ShowCapturePrompt() => KeyText.text = "SELECT A KEY";

@@ -49,7 +49,9 @@ public static class MenuAPI
     /// Recommended to use newer delegate source, <see cref="AddToSettingsMenus(BuilderDelegate)"/>
     /// </summary>
     /// <param name="builderDelegate"></param>
-    [Obsolete("This will still work but it's recommended to use the newer delegate source in AddToSettingsMenus")]
+    [Obsolete(
+        "This will still work but it's recommended to use the newer delegate source in AddToSettingsMenus"
+    )]
     public static void AddToSettingsMenu(BuilderDelegate builderDelegate) =>
         settingsMenuBuilderDelegate += builderDelegate;
 
@@ -359,7 +361,10 @@ public static class MenuAPI
             );
 
         // size of dropdown is not working for whatever reason
-        var clone = Object.Instantiate(SingletonAsset<InputCellMapper>.Instance.EnumSettingCell, parent);
+        var clone = Object.Instantiate(
+            SingletonAsset<InputCellMapper>.Instance.EnumSettingCell,
+            parent
+        );
         Object.DestroyImmediate(clone.GetComponent<EnumSettingUI>());
         clone.name = $"UI_PeakDropdown_{dropdownName}";
         var newDropdown = clone.AddComponent<PeakDropdown>();

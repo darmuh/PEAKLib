@@ -77,5 +77,6 @@ internal class BepInExInt(
     public string GetDisplayName() => entryBase.Definition.Key;
 
     protected override int GetDefaultValue() => GetDefaultValue<int>(entryBase);
+
     public void SetDefaultValue() => SetBoxedValue(entryBase, GetDefaultValue());
 }

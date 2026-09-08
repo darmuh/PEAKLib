@@ -36,16 +36,17 @@ internal class BepInExInt_SettingUI : SettingInputUICell
 
     private void AddDefaultButton()
     {
-        SetDefaultButton = MenuAPI.CreateMenuButton("DefaultsButton")
-        .ParentTo(transform)
-        .SetSize(new(90f, 30f))
-        .SetAnchorMin(new(0.5f, 0.5f))
-        .SetAnchorMax(new(0.5f, 0.5f))
-        .SetPosition(new(186f, 0f))
-        .OnClick(SetDefaultValue)
-        .SetText("DEFAULT")
-        .SetBorderColor(Color.white)
-        .SetColor(Color.dodgerBlue);
+        SetDefaultButton = MenuAPI
+            .CreateMenuButton("DefaultsButton")
+            .ParentTo(transform)
+            .SetSize(new(90f, 30f))
+            .SetAnchorMin(new(0.5f, 0.5f))
+            .SetAnchorMax(new(0.5f, 0.5f))
+            .SetPosition(new(186f, 0f))
+            .OnClick(SetDefaultValue)
+            .SetText("DEFAULT")
+            .SetBorderColor(Color.white)
+            .SetColor(Color.dodgerBlue);
 
         SetDefaultButton.Text.rectTransform.offsetMin = new(10f, 10f);
         SetDefaultButton.Text.rectTransform.offsetMax = new(-10f, -10f);
