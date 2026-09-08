@@ -11,10 +11,10 @@ static class PauseMenuMainPageHooks
     [MonoDetourHookInitialize]
     static void Init()
     {
-        Awake.Postfix(PostfixAwake);
+        Start.Postfix(PostfixStart);
     }
 
-    private static void PostfixAwake(PauseMenuMainPage self)
+    private static void PostfixStart(PauseMenuMainPage self)
     {
         MenuAPI.pauseMenuBuilderDelegate?.Invoke(self.transform);
 
