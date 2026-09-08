@@ -360,7 +360,6 @@ public static class MenuAPI
                 "You're creating Dropdown too early! Prefab hasn't been loaded yet."
             );
 
-        // size of dropdown is not working for whatever reason
         var clone = Object.Instantiate(
             SingletonAsset<InputCellMapper>.Instance.EnumSettingCell,
             parent
