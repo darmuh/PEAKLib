@@ -129,7 +129,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .SetPosition(new Vector2(428, -70))
                 .SetSize(new Vector2(1360, 980));
 
-            var settingsMenu = content.gameObject.AddComponent<ModdedSettingsMenu>();
+            var settingsMenu = content.gameObject.AddComponent<ModSettingsMenu>();
             settingsMenu.MainPage = modSettingsPage;
 
             settingsMenu.FilterDropdown = MenuAPI.CreateDropdown("Settings Filter", settingsMenu.transform)
@@ -215,7 +215,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
                     handler?.TransistionToPage(modSettingsPage, new SetActivePageTransistion());
 
-                    ModdedSettingsMenu.Instance?.MainPage.SetParentPage(settingsParent);
+                    ModSettingsMenu.Instance?.MainPage.SetParentPage(settingsParent);
                 });
 
             modSettingsPage.gameObject.SetActive(false);
@@ -253,10 +253,10 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .OnClick(() =>
                 {
                     // set filter view to controls only and open settings
-                    ModdedSettingsMenu.Instance.FilterDropdown.Dropdown.value = 16;
-                    ModdedSettingsMenu.Instance.FilterValue = 16;
-                    ModdedSettingsMenu.Instance.MainPage.SetParentPage(controlsParent);
-                    pauseMenuHandler?.TransistionToPage(ModdedSettingsMenu.Instance.MainPage, new SetActivePageTransistion());
+                    ModSettingsMenu.Instance.FilterDropdown.Dropdown.value = 16;
+                    ModSettingsMenu.Instance.FilterValue = 16;
+                    ModSettingsMenu.Instance.MainPage.SetParentPage(controlsParent);
+                    pauseMenuHandler?.TransistionToPage(ModSettingsMenu.Instance.MainPage, new SetActivePageTransistion());
                 });
         }
 

@@ -12,7 +12,7 @@ using Zorro.Settings;
 
 namespace PEAKLib.ModConfig.Components;
 
-internal class ModdedSettingsMenu : MonoBehaviour
+internal class ModSettingsMenu : MonoBehaviour
 {
     private void OnEnable()
     {
@@ -22,7 +22,7 @@ internal class ModdedSettingsMenu : MonoBehaviour
             ModTabs.Select(ModTabs.selectedButton);
     }
 
-    internal static ModdedSettingsMenu Instance { get; private set; } = null!;
+    internal static ModSettingsMenu Instance { get; private set; } = null!;
 
     public ModdedSettingsTABS ModTabs { get; set; } = null!;
     public ModdedSettingsSectionTABS SectionTabs { get; set; } = null!;

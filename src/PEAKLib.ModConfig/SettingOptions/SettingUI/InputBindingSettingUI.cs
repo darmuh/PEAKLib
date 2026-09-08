@@ -103,7 +103,7 @@ internal abstract class InputBindingSettingUI : SettingInputUICell
 
         if (KeySetting is IBepInExProperty bep)
         {
-            string match = ModdedSettingsMenu.GetMatchingValues(bep);
+            string match = ModSettingsMenu.GetMatchingValues(bep);
 
             // build warning string
             if (match != string.Empty)

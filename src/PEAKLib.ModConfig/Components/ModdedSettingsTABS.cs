@@ -5,7 +5,7 @@ namespace PEAKLib.ModConfig.Components;
 
 internal class ModdedSettingsTABS : TABS<ModdedTABSButton>
 {
-    public ModdedSettingsMenu? SettingsMenu;
+    public ModSettingsMenu? SettingsMenu;
 
     public override void OnSelected(ModdedTABSButton button)
     {
