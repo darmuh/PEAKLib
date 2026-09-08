@@ -60,6 +60,8 @@ internal class ModSettingsMenu : MonoBehaviour
 
     public void SetFilter(int value)
     {
+        // set all tabs to active that may have been disabled
+        SetAllTabsActive();
         FilterValue = value;
         ShowSettings(); // just to update the settings
     }
@@ -146,6 +148,15 @@ internal class ModSettingsMenu : MonoBehaviour
         m_fadeInCoroutine = StartCoroutine(FadeInCells());
     }
 
+    private void SetAllTabsActive()
+    {
+        foreach (var tab in ModTabController.Tabs)
+            tab.SetActive(true);
+
+        foreach (var tab in SectionTabController.Tabs)
+            tab.SetActive(true);
+    }
+
     private bool ShouldUseFilterResults(
         IEnumerable<IBepInExProperty> listing,
         out IEnumerable<IBepInExProperty> outListing
@@ -219,6 +230,17 @@ internal class ModSettingsMenu : MonoBehaviour
             )
         );
 
+        // get tabs that do not contain any settings
+        var TabsWithoutSetting = SectionTabController.Tabs.FindAll(x => 
+            !thisModListing.Any(bep => bep.ConfigBase.Definition.Section == x.name));
+
+        // only hide tabs if setting exists in any other tab
+        if (SectionTabController.Tabs.Count != TabsWithoutSetting.Count)
+        {
+            foreach (var tab in TabsWithoutSetting)
+                tab.SetActive(false);
+        }
+
         // current section does not have any items
         if (!thisSection.Any())
         {
@@ -228,22 +250,69 @@ internal class ModSettingsMenu : MonoBehaviour
             );
             if (newSection != null)
             {
+                // hide current tab
+                if (SectionTabController.TryGetTab(selectedSection, out GameObject currentTab))
+                    currentTab.SetActive(false);
+
                 ModConfigPlugin.Log.LogDebug($"Updating mod section to {newSection.name}");
                 SectionTabs.Select(newSection.GetComponent<ModdedTABSButton>());
             }
             else
             {
-                // last resort, try to select a mod that contains the setting
-                var newMod = ModTabController.Tabs.FirstOrDefault(x =>
-                fullListing.Any(bep => bep.GetCategory() == x.name)
-                );
+                var ModsWithSetting = ModTabController.Tabs.FindAll(x => fullListing.Any(bep => bep.GetCategory() == x.name));
+                var ModsWithoutSetting = ModTabController.Tabs.Where(x => !ModsWithSetting.Contains(x));
+                if (ModsWithSetting.Count == 0 || !ModTabController.TryGetTab(selectedMod, out GameObject currentMod))
+                    return false;
 
-                if (newMod != null)
+                // last resort, try to select a mod that contains the setting
+                GameObject? newMod = null!;
+
+                var currentIndex = ModTabController.Tabs.IndexOf(currentMod);
+
+                // set to next closest tab to the left
+                if (ModsWithSetting.All(m => ModTabController.Tabs.IndexOf(m) < currentIndex))
                 {
-                    ModConfigPlugin.Log.LogDebug($"Updating selected mod to {newMod.name}");
-                    ModTabs.Select(newMod.GetComponent<ModdedTABSButton>());
+                    ModConfigPlugin.Log.LogDebug($"All tabs have a lower index than {currentIndex}");
+                    int nextIndex = 0; 
+                    foreach (var tab in ModsWithSetting)
+                    {
+                        int modIndex = ModTabController.Tabs.IndexOf(tab);
+                        ModConfigPlugin.Log.LogDebug($"{nextIndex} > {modIndex}");
+                        // get closest (highest) value to current index
+                        if (nextIndex < modIndex)
+                        {
+                            newMod = tab;
+                            nextIndex = modIndex;
+                        }
+                    }
                 }
-                    
+                else
+                {
+                    ModConfigPlugin.Log.LogDebug($"Finding next lowest index after {currentIndex}");
+                    // set to next closest tab to the right
+                    int nextIndex = ModTabController.Tabs.Count;
+                    foreach (var tab in ModsWithSetting)
+                    {
+                        int modIndex = ModTabController.Tabs.IndexOf(tab);
+                        ModConfigPlugin.Log.LogDebug($"{nextIndex} < {modIndex} && {modIndex} > {currentIndex}");
+                        // get lowest index above current index
+                        if (nextIndex > modIndex && modIndex > currentIndex) 
+                        {
+                            newMod = tab;
+                            nextIndex = modIndex;
+                        }
+                    }
+                }
+
+                if (newMod == null)
+                    return false;
+
+                // hide mods without setting
+                foreach(var mod in ModsWithoutSetting)
+                    mod.SetActive(false);
+
+                ModConfigPlugin.Log.LogDebug($"Updating selected mod to {newMod.name}");
+                ModTabs.Select(newMod.GetComponent<ModdedTABSButton>());
             }
 
             // do not continue with original ShowSettings, regardless of the above results

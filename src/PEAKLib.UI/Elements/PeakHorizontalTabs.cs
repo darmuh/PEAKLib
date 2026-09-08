@@ -121,6 +121,18 @@ public class PeakHorizontalTabs : PeakElement
         return gameObject;
     }
 
+    /// <summary>
+    /// Try to get an existing tab by name
+    /// </summary>
+    /// <param name="tabName"></param>
+    /// <param name="Tab"></param>
+    /// <returns>True/False if Tab exists or not</returns>
+    public bool TryGetTab(string tabName, out GameObject Tab)
+    {
+        Tab = Tabs.FirstOrDefault(t => t.name == tabName);
+        return Tab != null;
+    }
+
     private bool DoesTabExist(string tabName, out GameObject match)
     {
         match = null!;
