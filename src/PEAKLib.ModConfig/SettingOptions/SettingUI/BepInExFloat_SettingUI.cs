@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using PEAKLib.UI;
+﻿using PEAKLib.UI;
 using PEAKLib.UI.Elements;
 using UnityEngine;
 using Zorro.Settings;

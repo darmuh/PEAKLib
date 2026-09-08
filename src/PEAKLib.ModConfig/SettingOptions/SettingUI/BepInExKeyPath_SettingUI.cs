@@ -1,4 +1,3 @@
-using PEAKLib.ModConfig;
 using Zorro.Settings;
 
 namespace PEAKLib.ModConfig.SettingOptions.SettingUI;
