@@ -190,6 +190,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
             var modSectionTABS = sectionTabs.gameObject.AddComponent<ModdedSettingsSectionTABS>();
             modSectionTABS.SettingsMenu = settingsMenu;
+            settingsMenu.ModTabController = horizontalTabs;
             settingsMenu.SectionTabController = sectionTabs;
 
             var tabContent = MenuAPI

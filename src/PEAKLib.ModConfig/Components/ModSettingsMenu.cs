@@ -38,7 +38,8 @@ internal class ModSettingsMenu : MonoBehaviour
     private string search = "";
     private string selectedSection = "";
     private string selectedMod = "";
-    public PeakHorizontalTabs SectionTabController = null!;
+    public PeakHorizontalTabs SectionTabController { get; set; } = null!;
+    public PeakHorizontalTabs ModTabController { get; set; } = null!;
 
     internal PeakChildPage MainPage = null!;
     internal PeakDropdown FilterDropdown { get; set; } = null!;
@@ -153,9 +154,6 @@ internal class ModSettingsMenu : MonoBehaviour
         // set to initially provided listing
         outListing = listing;
 
-        // get only the current mod's settings
-        var beplisting = listing.Where(b => b.GetCategory() == selectedMod);
-
         // Filter set to nothing, refresh empty handed
         if (FilterValue == 0)
         {
@@ -178,58 +176,77 @@ internal class ModSettingsMenu : MonoBehaviour
 
         // cull items not matching each filter item
         if (!boolsEnabled)
-            beplisting = beplisting.Where(setting =>
+            outListing = outListing.Where(setting =>
                 setting.ConfigBase.SettingType != typeof(bool)
             );
 
         // typeof(string) will include strings with acceptable values, so use BepInExString type instead
         if (!stringsEnabled)
-            beplisting = beplisting.Where(setting => setting is not BepInExString);
+            outListing = outListing.Where(setting => setting is not BepInExString);
 
         System.Type[] nums = [typeof(int), typeof(float), typeof(double)];
         if (!numbersEnabled)
-            beplisting = beplisting.Where(setting =>
+            outListing = outListing.Where(setting =>
                 !nums.Any(x => setting.ConfigBase.SettingType == x)
             );
 
         if (!enumsEnabled)
-            beplisting = beplisting.Where(setting => setting is not BepInExEnum);
+            outListing = outListing.Where(setting => setting is not BepInExEnum);
 
         if (!controlsEnabled)
-            beplisting = beplisting.Where(setting =>
+            outListing = outListing.Where(setting =>
                 setting is not BepInExKeyPath && setting.ConfigBase.SettingType != typeof(KeyCode)
             );
 
         // --- Filter End
 
         // If full listing is empty, end here
-        if (!beplisting.Any())
+        if (!outListing.Any())
         {
             m_fadeInCoroutine = StartCoroutine(FadeInCells());
             return false;
         }
 
+        // get only the current mod's settings
+        var fullListing = outListing;
+        var thisModListing = fullListing.Where(b => b.GetCategory() == selectedMod);
+
         // get section settings, don't update beplisting yet so we can compare this to it later
-        var thisSection = beplisting.Where(setting =>
+        var thisSection = thisModListing.Where(setting =>
             setting.ConfigBase.Definition.Section.Equals(
                 selectedSection,
                 StringComparison.InvariantCultureIgnoreCase
             )
         );
 
-        // switch to first section with valid definition (if possible) and end here
-        if (!thisSection.Any() && SectionTabController.Tabs.Any(tab => tab.name != selectedSection))
+        // current section does not have any items
+        if (!thisSection.Any())
         {
-            var newCat = SectionTabController.Tabs.FirstOrDefault(x =>
-                beplisting.Any(bep => bep.ConfigBase.Definition.Section == x.name)
+            // try to select another section that contains filtered items
+            var newSection = SectionTabController.Tabs.FirstOrDefault(x =>
+                thisModListing.Any(bep => bep.ConfigBase.Definition.Section == x.name)
             );
-            if (newCat != null)
+            if (newSection != null)
             {
-                ModConfigPlugin.Log.LogDebug($"Updating category to {newCat.name}");
-                var sectionTab = newCat.GetComponent<ModdedTABSButton>();
-                SectionTabs.Select(sectionTab);
+                ModConfigPlugin.Log.LogDebug($"Updating mod section to {newSection.name}");
+                SectionTabs.Select(newSection.GetComponent<ModdedTABSButton>());
+            }
+            else
+            {
+                // last resort, try to select a mod that contains the setting
+                var newMod = ModTabController.Tabs.FirstOrDefault(x =>
+                fullListing.Any(bep => bep.GetCategory() == x.name)
+                );
+
+                if (newMod != null)
+                {
+                    ModConfigPlugin.Log.LogDebug($"Updating selected mod to {newMod.name}");
+                    ModTabs.Select(newMod.GetComponent<ModdedTABSButton>());
+                }
+                    
             }
 
+            // do not continue with original ShowSettings, regardless of the above results
             return false;
         }
 
