@@ -111,7 +111,7 @@ public static class MenuAPI
     /// <returns></returns>
     public static PeakMenuButton CreateMenuButton(string buttonName)
     {
-        ThrowHelper.ThrowIfFieldNull(buttonName);
+        ThrowHelper.ThrowIfArgumentNull(buttonName);
 
         if (Templates.ButtonTemplate == null)
             throw new System.Exception(
@@ -174,7 +174,7 @@ public static class MenuAPI
     /// <returns></returns>
     public static PeakButton CreateButton(string buttonName)
     {
-        ThrowHelper.ThrowIfFieldNullOrWhiteSpace(buttonName);
+        ThrowHelper.ThrowIfArgumentNullOrWhiteSpace(buttonName);
 
         var gameObj = new GameObject(buttonName);
 
@@ -353,7 +353,7 @@ public static class MenuAPI
     /// </summary>
     public static PeakDropdown CreateDropdown(string dropdownName, Transform parent)
     {
-        ThrowHelper.ThrowIfFieldNull(dropdownName);
+        ThrowHelper.ThrowIfArgumentNull(dropdownName);
 
         if (SingletonAsset<InputCellMapper>.Instance.EnumSettingCell == null)
             throw new System.Exception(
