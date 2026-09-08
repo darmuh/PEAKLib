@@ -153,10 +153,8 @@ internal class ModSettingsMenu : MonoBehaviour
         // set to initially provided listing
         outListing = listing;
 
-        var beplisting = listing.Cast<IBepInExProperty>(); // lets us get the configbase element
-
         // get only the current mod's settings
-        beplisting = beplisting.Where(b => b.GetCategory() == selectedMod);
+        var beplisting = listing.Where(b => b.GetCategory() == selectedMod);
 
         // Filter set to nothing, refresh empty handed
         if (FilterValue == 0)
