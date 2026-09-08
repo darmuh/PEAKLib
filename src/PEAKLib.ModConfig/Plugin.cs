@@ -219,11 +219,15 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                 .ParentTo(parent)
                 .OnClick(() =>
                 {
+                    // reset filter view to includ everything
+                    ModSettingsMenu.Instance.FilterDropdown.Dropdown.value = 31;
+                    ModSettingsMenu.Instance.FilterValue = 31;
+                    // set parent to settings menu
+                    ModSettingsMenu.Instance.MainPage.SetParentPage(settingsParent);
+
                     var handler = mainMenuHandler as UIPageHandler ?? pauseMenuHandler;
 
                     handler?.TransistionToPage(modSettingsPage, new SetActivePageTransistion());
-
-                    ModSettingsMenu.Instance?.MainPage.SetParentPage(settingsParent);
                 });
 
             modSettingsPage.gameObject.SetActive(false);
