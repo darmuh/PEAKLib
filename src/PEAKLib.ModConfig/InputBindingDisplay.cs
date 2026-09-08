@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using PEAKLib.UI.Elements;
 using TMPro;
 using UnityEngine;
@@ -9,18 +10,6 @@ namespace PEAKLib.ModConfig;
 internal static class InputBindingDisplay
 {
     private const string UnknownSpriteTag = "<sprite=124 tint=1>";
-
-    public static void SetText(PeakText text, KeyCode keyCode)
-    {
-        SetText(text.TextMesh, keyCode);
-        text.RectTransform.sizeDelta = text.TextMesh.GetPreferredValues();
-    }
-
-    public static void SetText(PeakText text, string path)
-    {
-        SetText(text.TextMesh, path);
-        text.RectTransform.sizeDelta = text.TextMesh.GetPreferredValues();
-    }
 
     public static void SetText(TMP_Text text, KeyCode keyCode)
     {
@@ -94,6 +83,20 @@ internal static class InputBindingDisplay
             InputBindingDevice.Unsupported => keyPath,
             _ => keyPath,
         };
+    }
+
+    // used to compare only matching device type sprites
+    public static bool CompareVanillaToSprite(string spriteTag, string keyPath, InputBindingDevice spriteDevice)
+    {
+        var keyPathDevice = InputBindingPath.GetDevice(keyPath);
+        List<InputBindingDevice> kbm = [InputBindingDevice.Keyboard, InputBindingDevice.Mouse];
+
+        if (spriteDevice == keyPathDevice || (kbm.Contains(spriteDevice) && kbm.Contains(keyPathDevice)))
+        {
+            return spriteTag == GetSpriteTagText(keyPath);
+        }
+        else
+            return false;
     }
 
     private static void SetSpriteOrRaw(

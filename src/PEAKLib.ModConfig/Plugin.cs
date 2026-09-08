@@ -61,6 +61,9 @@ public partial class ModConfigPlugin : BaseUnityPlugin
 
     private void Start()
     {
+        // refresh player control overrides for keybinds, vanilla does this later when the controls page becomes available
+        Rebinding.LoadRebindingsFromFile();
+
         LoadModConfigLocalizations();
         LoadModSettings();
 

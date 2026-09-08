@@ -146,11 +146,19 @@ internal class ModSettingsMenu : MonoBehaviour
         // set to initially provided listing
         outListing = listing;
 
+        var beplisting = listing.Cast<IBepInExProperty>(); // lets us get the configbase element
+
+        // get only the current mod's settings
+        beplisting = beplisting.Where(b => b.GetCategory() == selectedMod);
+
+        // Filter set to nothing, refresh empty handed
         if (FilterValue == 0)
         {
             m_fadeInCoroutine = StartCoroutine(FadeInCells());
             return false;
         }
+
+        // --- Filter Start
 
         ModConfigPlugin.Log.LogDebug($"FilterValue: {FilterValue}");
         // check filter flag values
@@ -160,11 +168,6 @@ internal class ModSettingsMenu : MonoBehaviour
         var enumsEnabled = ((FilterValue & (1 << 3)) != 0);
         var controlsEnabled = ((FilterValue & (1 << 4)) != 0);
         ModConfigPlugin.Log.LogDebug($"bools:{boolsEnabled},strings:{stringsEnabled},numbers:{numbersEnabled},enums:{enumsEnabled},controls:{controlsEnabled}");
-
-        var beplisting = listing.Cast<IBepInExProperty>(); // lets us get the configbase element
-
-        // get only the current mod's settings
-        beplisting = beplisting.Where(b => b.GetCategory() == selectedMod);
 
         // cull items not matching each filter item
         if (!boolsEnabled)
@@ -184,6 +187,9 @@ internal class ModSettingsMenu : MonoBehaviour
         if (!controlsEnabled)
             beplisting = beplisting.Where(setting => setting is not BepInExKeyPath && setting.ConfigBase.SettingType != typeof(KeyCode));
 
+        // --- Filter End
+
+        // If full listing is empty, end here
         if (!beplisting.Any())
         {
             m_fadeInCoroutine = StartCoroutine(FadeInCells());
@@ -193,7 +199,7 @@ internal class ModSettingsMenu : MonoBehaviour
         // get section settings, don't update beplisting yet so we can compare this to it later
         var thisSection = beplisting.Where(setting => setting.ConfigBase.Definition.Section.Equals(selectedSection, StringComparison.InvariantCultureIgnoreCase));
 
-        // switch to first section with valid definition (if possible)
+        // switch to first section with valid definition (if possible) and end here
         if (!thisSection.Any() && SectionTabController.Tabs.Any(tab => tab.name != selectedSection))
         {
             var newCat = SectionTabController.Tabs.FirstOrDefault(x => beplisting.Any(bep => bep.ConfigBase.Definition.Section == x.name));
@@ -233,11 +239,23 @@ internal class ModSettingsMenu : MonoBehaviour
         bool itemIsKeyCode = (item.ConfigBase.SettingType == typeof(KeyCode));
         bool itemIsPath = (item.ConfigBase.SettingType == typeof(string));
 
-        if (itemIsKeyCode)
-            keyvalue = InputBindingDisplay.GetSpriteTagText(item.GetKeyValue<KeyCode>());
+        // assume a control is kbm unless otherwise found
+        InputBindingDevice deviceType = InputBindingDevice.Keyboard;
 
+        if (itemIsKeyCode)
+        {
+            KeyCode key = item.GetKeyValue<KeyCode>();
+            keyvalue = InputBindingDisplay.GetSpriteTagText(key);
+            if (key.ToString().StartsWith("Joystick", StringComparison.Ordinal))
+                deviceType = InputBindingDevice.Gamepad; // this is the only time keycode changes from kbm
+        }
+            
         if (itemIsPath)
-            keyvalue = InputBindingDisplay.GetSpriteTagText(item.GetKeyValue<string>());
+        {
+            string keyPath = item.GetKeyValue<string>();
+            keyvalue = InputBindingDisplay.GetSpriteTagText(keyPath);
+            deviceType = InputBindingPath.GetDevice(keyPath);
+        }
 
         ModConfigPlugin.Log.LogDebug($"comparing {keyvalue}");
 
@@ -265,7 +283,7 @@ internal class ModSettingsMenu : MonoBehaviour
                 matchingControls += $"({key.GetCategory()}) {key.ConfigBase.Definition.Key}, ";
         }
 
-        // This should just be vanilla controls, modders don't need to insert controls in here
+        // This should just be vanilla controls, modders don't need to insert controls in here usually
         List<string> matchingvanilla = [];
         foreach (InputAction action in InputSystem.actions)
         {
@@ -274,7 +292,7 @@ internal class ModSettingsMenu : MonoBehaviour
                 if (bind.action.Equals("AnyKey", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (keyvalue == InputBindingDisplay.GetSpriteTagText(bind.effectivePath))
+                if (InputBindingDisplay.CompareVanillaToSprite(keyvalue, bind.effectivePath, deviceType))
                     matchingvanilla.Add(bind.action);
             }
         }
