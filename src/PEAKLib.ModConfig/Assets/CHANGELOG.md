@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-09-08
+
+[ModConfig Improvements + UI Module Additions - #58](<https://github.com/PEAKModding/PEAKLib/pull/58>)
+
+### Added
+
+- Added a multi-select filter to the Mod Settings Page, allowing sorting by setting type. Filter cascades with below logic:
+  1. Searches the current section for settings matching the filter.
+  2. On no match found, searches other sections in the same mod for a matching setting.
+  3. On no match found from other sections, attempts to return the first mod containing a matching setting.
+  4. On no match in any other mods, no settings will be shown. (same as filter being set to nothing)
+- Added (set to) Default button for all setting types and Clear button for setting types that can have an empty value
+- Added warning message to InputBinding settings that match any other binding, including vanilla controls.
+
+### Changed
+
+- Deleted the Mod Controls Page and all associated supporting classes/methods
+- The button on the Vanilla Controls page that previously opened the (now‑removed) Mod Controls Page now opens the Mod Settings page instead, with the filter automatically set to "Controls".
+
+### Fixed
+
+- Moved localization initialization to `Plugin Awake` to ensure they are loaded before being displayed anywhere.
+- Fixed back button logic to return to the previous entry page (addresses [#53](<https://github.com/PEAKModding/PEAKLib/issues/53>)).
+
 ## [1.7.0] - 2026-09-01
 
 [Fix/modconfig input path settings - #54](<https://github.com/PEAKModding/PEAKLib/pull/54>)

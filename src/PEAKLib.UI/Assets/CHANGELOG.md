@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-09-08
+
+[ModConfig Improvements + UI Module Additions - #58](<https://github.com/PEAKModding/PEAKLib/pull/58>)
+
+### Added
+
+- Added `PeakDropdown` to provide vanilla-style dropdowns via MenuAPI (currently utilized by ModConfig's new filter).
+- Marked `AddToSettingsMenu` as `[Obsolete]`. Replaced it with `AddToSettingsMenus`, which uses an updated builder delegate that will run _before_ the settings page is opened in-game. The old method is retained for backward compatibility.
+
 ## [1.6.2] - 2026-08-29
 
 ### Fixed
