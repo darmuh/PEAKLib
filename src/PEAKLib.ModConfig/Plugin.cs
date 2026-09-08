@@ -226,12 +226,6 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             modSettingsButton?.SetPosition(new Vector2(171, -230)).SetWidth(220);
         }
 
-        // instead of an independent controls page, should just use the mod settings page as a base
-        // Add a filter button in place of the Mod Controls button
-        // filter button popup with dropdown? Or just a dropdown in place?
-        // Have two entry points to mod settings page; from controls -> mod settings filter:controls; from settings -> mod settings filter:all
-        // show duplicate control values with yellow text?
-
         void modControls(Transform parent)
         {
             ThrowHelper.ThrowIfArgumentNull(ModSettingsLoc);
