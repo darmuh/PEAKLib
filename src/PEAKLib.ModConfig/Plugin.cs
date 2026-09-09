@@ -337,8 +337,8 @@ public partial class ModConfigPlugin : BaseUnityPlugin
     }
 
     //Processes Bepinex config items to Settings entries
-    //Called during mod initialization AND whenever the mod settings page is opened
-    private static void ProcessModEntries()
+    //Called during 1) mod initialization 2) mod settings page is opened 3) null plugin instances are found
+    internal static void ProcessModEntries()
     {
         foreach (var (plugin, configEntryBases) in GetModConfigEntries())
         {

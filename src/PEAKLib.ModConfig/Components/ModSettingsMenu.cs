@@ -421,7 +421,13 @@ internal class ModSettingsMenu : MonoBehaviour
         {
             // remove settings with dead (null) plugin instances, fixes autoreload plugins with duplicate settings issue
             var deadSettings = GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>().FindAll(x => x.Pluginfo.Instance == null).Cast<Setting>();
-            GameHandler.Instance.SettingsHandler.settings.RemoveAll(x => deadSettings.Contains(x));
+            if (deadSettings.Any())
+            {
+                GameHandler.Instance.SettingsHandler.settings.RemoveAll(x => deadSettings.Contains(x));
+                // get fresh config items
+                ModConfigPlugin.ProcessModEntries();
+            }
+            
 
             settings = GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>();
         }
