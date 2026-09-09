@@ -1,4 +1,5 @@
 ﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.UI;
 using PEAKLib.UI.Elements;
@@ -14,6 +15,7 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExString(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string category = "Mods",
     Action<string>? saveCallback = null,
     Action<BepInExString>? onApply = null
@@ -23,6 +25,8 @@ internal class BepInExString(
     {
         get => entryBase;
     }
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
 
     public string PlaceholderText { get; set; } = GetDefaultValue<string>(entryBase) ?? "";
     private static GameObject? _settingUICell = null;

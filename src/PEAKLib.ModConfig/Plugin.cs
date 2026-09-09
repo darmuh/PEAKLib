@@ -203,8 +203,9 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             settingsMenu.ModTabs = moddedSettingsTABS;
             settingsMenu.SectionTabs = modSectionTABS;
 
-            foreach (var (modName, configEntryBases) in GetModConfigEntries())
+            foreach (var mod in ModSectionNames.SectionNames)
             {
+                var modName = mod.ModName;
                 var tabButton = horizontalTabs.AddTab(modName);
                 var moddedButton = tabButton.AddComponent<ModdedTABSButton>();
                 moddedButton.category = modName;
@@ -339,8 +340,9 @@ public partial class ModConfigPlugin : BaseUnityPlugin
     //Called during mod initialization AND whenever the mod settings page is opened
     private static void ProcessModEntries()
     {
-        foreach (var (modName, configEntryBases) in GetModConfigEntries())
+        foreach (var (plugin, configEntryBases) in GetModConfigEntries())
         {
+            var modName = FixNaming(plugin.Metadata.Name);
             ModSectionNames sectionTracker = ModSectionNames.SetMod(modName);
 
             foreach (var configEntry in configEntryBases)
@@ -358,6 +360,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     if (configEntry.SettingType == typeof(bool))
                         SettingsHandlerUtility.AddBoolToTab(
                             configEntry,
+                            plugin,
                             modName,
                             newVal => configEntry.BoxedValue = newVal
                         );
@@ -365,6 +368,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     {
                         SettingsHandlerUtility.AddFloatToTab(
                             configEntry,
+                            plugin,
                             modName,
                             newVal => configEntry.BoxedValue = newVal
                         );
@@ -373,6 +377,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     {
                         SettingsHandlerUtility.AddDoubleToTab(
                             configEntry,
+                            plugin,
                             modName,
                             newVal => configEntry.BoxedValue = newVal
                         );
@@ -381,6 +386,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     {
                         SettingsHandlerUtility.AddIntToTab(
                             configEntry,
+                            plugin,
                             modName,
                             newVal => configEntry.BoxedValue = newVal
                         );
@@ -395,6 +401,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                         {
                             SettingsHandlerUtility.AddKeyPathToTab(
                                 configEntry,
+                                plugin,
                                 modName,
                                 newVal => configEntry.BoxedValue = newVal
                             );
@@ -409,6 +416,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                         {
                             SettingsHandlerUtility.AddEnumToTab(
                                 configEntry,
+                                plugin,
                                 modName,
                                 false,
                                 newVal =>
@@ -421,6 +429,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                         {
                             SettingsHandlerUtility.AddStringToTab(
                                 configEntry,
+                                plugin,
                                 modName,
                                 newVal => configEntry.BoxedValue = newVal
                             );
@@ -430,6 +439,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     {
                         SettingsHandlerUtility.AddKeybindToTab(
                             configEntry,
+                            plugin,
                             modName,
                             newVal => configEntry.BoxedValue = newVal
                         );
@@ -438,6 +448,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
                     {
                         SettingsHandlerUtility.AddEnumToTab(
                             configEntry,
+                            plugin,
                             modName,
                             true,
                             newVal =>
@@ -461,9 +472,10 @@ public partial class ModConfigPlugin : BaseUnityPlugin
     }
 
     // From https://github.com/IsThatTheRealNick/REPOConfig/blob/main/REPOConfig/ConfigMenu.cs#L453
-    private static Dictionary<string, ConfigEntryBase[]> GetModConfigEntries()
+    // modified to capture plugin instances directly instead of just mod names
+    private static Dictionary<PluginInfo, ConfigEntryBase[]> GetModConfigEntries()
     {
-        var configs = new Dictionary<string, ConfigEntryBase[]>();
+        var configs = new Dictionary<PluginInfo, ConfigEntryBase[]>();
 
         foreach (var plugin in Chainloader.PluginInfos.Values.OrderBy(p => p.Metadata.Name))
         {
@@ -484,7 +496,7 @@ public partial class ModConfigPlugin : BaseUnityPlugin
             }
 
             if (configEntries.Count > 0)
-                configs.TryAdd(FixNaming(plugin.Metadata.Name), [.. configEntries]);
+                configs.TryAdd(plugin, [.. configEntries]);
         }
 
         return configs;

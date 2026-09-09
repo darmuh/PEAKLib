@@ -16,8 +16,6 @@ internal class ModSettingsMenu : MonoBehaviour
 {
     private void OnEnable()
     {
-        RefreshSettings();
-
         if (ModTabs != null && ModTabs.selectedButton != null)
             ModTabs.Select(ModTabs.selectedButton);
     }
@@ -421,9 +419,11 @@ internal class ModSettingsMenu : MonoBehaviour
     {
         if (GameHandler.Instance != null)
         {
-            var exposedsettings =
-                GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>();
-            settings = [.. exposedsettings.Where(setting => setting.ConfigBase != null)]; // fix for autoreload mods?
+            // remove settings with dead (null) plugin instances, fixes autoreload plugins with duplicate settings issue
+            var deadSettings = GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>().FindAll(x => x.Pluginfo.Instance == null).Cast<Setting>();
+            GameHandler.Instance.SettingsHandler.settings.RemoveAll(x => deadSettings.Contains(x));
+
+            settings = GameHandler.Instance.SettingsHandler.GetSettingsThatImplements<IBepInExProperty>();
         }
     }
 

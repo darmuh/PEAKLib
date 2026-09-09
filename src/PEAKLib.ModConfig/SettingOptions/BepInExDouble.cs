@@ -1,4 +1,5 @@
 ﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using Unity.Mathematics;
 using Zorro.Settings;
@@ -8,6 +9,7 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExDouble(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string categoryName = "Mods",
     Action<double>? saveCallback = null,
     Action<BepInExDouble>? onApply = null
@@ -17,6 +19,8 @@ internal class BepInExDouble(
     {
         get => entryBase;
     }
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
 
     public override void Load(ISettingsSaveLoad loader)
     {

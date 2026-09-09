@@ -1,4 +1,5 @@
 using System;
+using BepInEx;
 using BepInEx.Configuration;
 using Zorro.Settings;
 using static PEAKLib.ModConfig.SettingsHandlerUtility;
@@ -7,11 +8,14 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal abstract class BepInExInputBindingSetting<TValue>(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string category,
     Action<TValue>? saveCallback
 ) : Setting, IBepInExProperty, IExposedSetting
 {
     public ConfigEntryBase ConfigBase => entryBase;
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
 
     public TValue Value { get; private set; } = GetCurrentValue<TValue>(entryBase);
 

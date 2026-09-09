@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using UnityEngine;
@@ -13,15 +14,15 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExOffOn(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string category = "Mods",
     Action<bool>? saveCallback = null,
     Action<BepInExOffOn>? onApply = null
 ) : OffOnSetting, IBepInExProperty, IExposedSetting
 {
-    ConfigEntryBase IBepInExProperty.ConfigBase
-    {
-        get => entryBase;
-    }
+    ConfigEntryBase IBepInExProperty.ConfigBase => entryBase;
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
 
     private static GameObject? _settingUICell = null;
     public static GameObject? SettingUICell

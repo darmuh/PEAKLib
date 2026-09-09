@@ -1,4 +1,5 @@
 ﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using Unity.Mathematics;
@@ -12,15 +13,15 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExFloat(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string categoryName = "Mods",
     Action<float>? saveCallback = null,
     Action<BepInExFloat>? onApply = null
 ) : FloatSetting, IBepInExProperty, IExposedSetting
 {
-    ConfigEntryBase IBepInExProperty.ConfigBase
-    {
-        get => entryBase;
-    }
+    ConfigEntryBase IBepInExProperty.ConfigBase => entryBase;
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
 
     private static GameObject? _settingUICell = null;
     public static GameObject? SettingUICell

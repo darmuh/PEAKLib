@@ -1,4 +1,5 @@
 ﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using TMPro;
@@ -13,15 +14,16 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExInt(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string category = "Mods",
     Action<int>? saveCallback = null,
     Action<BepInExInt>? onApply = null
 ) : IntSetting, IBepInExProperty, IExposedSetting
 {
-    ConfigEntryBase IBepInExProperty.ConfigBase
-    {
-        get => entryBase;
-    }
+    ConfigEntryBase IBepInExProperty.ConfigBase => entryBase;
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
+
     private static GameObject? _settingUICell = null;
     public static GameObject? SettingUICell
     {

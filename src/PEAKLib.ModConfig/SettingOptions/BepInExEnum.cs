@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExEnum(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string category = "Mods",
     bool isEnum = true,
     Action<string>? saveCallback = null,
@@ -23,6 +25,8 @@ internal class BepInExEnum(
     {
         get => entryBase;
     }
+
+    PluginInfo IBepInExProperty.Pluginfo => plugin;
 
     private static GameObject? _settingUICell = null;
     public static GameObject? SettingUICell

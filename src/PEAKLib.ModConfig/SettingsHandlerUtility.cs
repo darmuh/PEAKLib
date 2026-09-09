@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.ModConfig.SettingOptions;
 using UnityEngine;
@@ -10,6 +11,7 @@ internal static class SettingsHandlerUtility
 {
     internal static void AddBoolToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<bool>? saveCallback = null
     )
@@ -19,11 +21,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExOffOn(entry, tabName, saveCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExOffOn(entry, plugin, tabName, saveCallback));
     }
 
     internal static void AddFloatToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<float>? applyCallback = null
     )
@@ -33,11 +36,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExFloat(entry, tabName, applyCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExFloat(entry, plugin, tabName, applyCallback));
     }
 
     internal static void AddDoubleToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<double>? applyCallback = null
     )
@@ -47,11 +51,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExDouble(entry, tabName, applyCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExDouble(entry, plugin, tabName, applyCallback));
     }
 
     internal static void AddIntToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<int>? saveCallback = null
     )
@@ -61,11 +66,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExInt(entry, tabName, saveCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExInt(entry, plugin, tabName, saveCallback));
     }
 
     internal static void AddStringToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<string>? saveCallback = null
     )
@@ -75,11 +81,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExString(entry, tabName, saveCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExString(entry, plugin, tabName, saveCallback));
     }
 
     internal static void AddKeyPathToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<string>? saveCallback = null
     )
@@ -89,11 +96,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExKeyPath(entry, tabName, saveCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExKeyPath(entry, plugin, tabName, saveCallback));
     }
 
     internal static void AddKeybindToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         Action<KeyCode>? saveCallback
     )
@@ -103,11 +111,12 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExKeyCode(entry, tabName, saveCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExKeyCode(entry, plugin, tabName, saveCallback));
     }
 
     internal static void AddEnumToTab(
         ConfigEntryBase entry,
+        PluginInfo plugin,
         string tabName,
         bool isEnum,
         Action<string>? saveCallback
@@ -118,7 +127,7 @@ internal static class SettingsHandlerUtility
                 "You're registering options too early! Use the Start() function to create new options!"
             );
 
-        SettingsHandler.Instance.AddSetting(new BepInExEnum(entry, tabName, isEnum, saveCallback));
+        SettingsHandler.Instance.AddSetting(new BepInExEnum(entry, plugin, tabName, isEnum, saveCallback));
     }
 
     public static T GetDefaultValue<T>(ConfigEntry<T> entry)

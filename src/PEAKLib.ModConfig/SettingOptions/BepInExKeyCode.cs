@@ -1,4 +1,5 @@
 using System;
+using BepInEx;
 using BepInEx.Configuration;
 using PEAKLib.ModConfig.SettingOptions.SettingUI;
 using UnityEngine;
@@ -7,10 +8,11 @@ namespace PEAKLib.ModConfig.SettingOptions;
 
 internal class BepInExKeyCode(
     ConfigEntryBase entryBase,
+    PluginInfo plugin,
     string category = "Mods",
     Action<KeyCode>? saveCallback = null,
     Action<BepInExKeyCode>? onApply = null
-) : BepInExInputBindingSetting<KeyCode>(entryBase, category, saveCallback)
+) : BepInExInputBindingSetting<KeyCode>(entryBase, plugin, category, saveCallback)
 {
     private static GameObject? _settingUICell;
     public static GameObject? SettingUICell
